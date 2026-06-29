@@ -1,0 +1,37 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Forge Engine",
+  "version": "1.0.0",
+  "identifier": "com.werseecloud.forgeengine",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://127.0.0.1:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Forge Engine",
+        "width": 1728,
+        "height": 972,
+        "minWidth": 1180,
+        "minHeight": 720,
+        "decorations": false,
+        "resizable": true,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "publisher": "WerseeCloud",
+    "category": "DeveloperTool",
+    "shortDescription": "Forge Engine desktop editor",
+    "longDescription": "A native Forge Engine editor shell for project, scene, and asset workflows."
+  }
+}
