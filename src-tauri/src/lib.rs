@@ -82,7 +82,12 @@ pub fn run() {
             commands::installer_log_commands::read_installer_log,
             commands::installer_log_commands::append_installer_log,
             commands::installer_log_commands::clear_installer_log,
-            commands::engine_commands::start_engine_services
+            commands::engine_commands::start_engine_services,
+            commands::worker_commands::start_worker,
+            commands::worker_commands::stop_worker,
+            commands::worker_commands::restart_worker,
+            commands::worker_commands::run_worker_health_check,
+            commands::worker_commands::get_worker_status
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Forge Engine editor");

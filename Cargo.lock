@@ -1234,14 +1234,48 @@ checksum = "aa9a19cbb55df58761df49b23516a86d432839add4af60fc256da840f66ed35b"
 [[package]]
 name = "forge_asset_worker"
 version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "forge_logs",
+ "forge_project",
+ "forge_settings",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "forge_build_worker"
 version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "clap",
+ "forge_logs",
+ "forge_project",
+ "forge_settings",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "forge_editor_core"
 version = "1.0.0"
+dependencies = [
+ "clap",
+ "forge_logs",
+ "forge_settings",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "forge_errors"
+version = "1.0.0"
+dependencies = [
+ "serde",
+ "thiserror 1.0.69",
+]
 
 [[package]]
 name = "forge_installer"
@@ -1250,6 +1284,8 @@ dependencies = [
  "anyhow",
  "chrono",
  "dirs 5.0.1",
+ "forge_process",
+ "forge_settings",
  "fs2",
  "serde",
  "serde_json",
@@ -1261,6 +1297,47 @@ dependencies = [
  "uuid",
  "walkdir",
  "winreg",
+]
+
+[[package]]
+name = "forge_ipc"
+version = "1.0.0"
+dependencies = [
+ "chrono",
+ "forge_errors",
+ "serde",
+ "serde_json",
+ "uuid",
+]
+
+[[package]]
+name = "forge_logs"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "dirs 5.0.1",
+]
+
+[[package]]
+name = "forge_process"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "serde",
+]
+
+[[package]]
+name = "forge_project"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "serde",
+ "serde_json",
+ "sha2",
+ "uuid",
+ "walkdir",
 ]
 
 [[package]]
@@ -1287,10 +1364,37 @@ dependencies = [
 [[package]]
 name = "forge_runtime"
 version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "forge_logs",
+ "forge_project",
+ "forge_settings",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "forge_settings"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "dirs 5.0.1",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "forge_shader_worker"
 version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "forge_logs",
+ "forge_settings",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "form_urlencoded"

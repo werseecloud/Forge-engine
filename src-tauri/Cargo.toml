@@ -27,3 +27,5 @@ thiserror = "1"
 uuid = { version = "1", features = ["v4", "serde"] }
 walkdir = "2"
 winreg = "0.55"
+forge_process = { path = "../crates/forge_process" }
+forge_settings = { path = "../crates/forge_settings" }

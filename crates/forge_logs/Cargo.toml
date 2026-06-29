@@ -1,0 +1,9 @@
+[package]
+name = "forge_logs"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+chrono = "0.4"
+dirs = "5"

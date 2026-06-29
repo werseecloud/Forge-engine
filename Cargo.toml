@@ -1,5 +1,11 @@
 [workspace]
 members = [
+  "crates/forge_errors",
+  "crates/forge_ipc",
+  "crates/forge_logs",
+  "crates/forge_process",
+  "crates/forge_project",
+  "crates/forge_settings",
   "src-tauri",
   "apps/forge_editor_core",
   "apps/forge_runtime",

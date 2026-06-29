@@ -7,3 +7,11 @@ edition = "2021"
 name = "forge_runtime"
 path = "src/main.rs"
 
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+forge_logs = { path = "../../crates/forge_logs" }
+forge_project = { path = "../../crates/forge_project" }
+forge_settings = { path = "../../crates/forge_settings" }

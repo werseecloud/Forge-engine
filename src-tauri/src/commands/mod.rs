@@ -15,3 +15,4 @@ pub mod association_commands;
 pub mod health_commands;
 pub mod installer_log_commands;
 pub mod engine_commands;
+pub mod worker_commands;
