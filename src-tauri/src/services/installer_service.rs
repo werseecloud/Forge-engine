@@ -195,12 +195,28 @@ fn create_launcher_files(config: &InstallConfig) -> Result<()> {
     let engine = Path::new(&config.install_path).join("ForgeEngine.exe");
     let hub = Path::new(&config.install_path).join("ForgeHub.exe");
     let uninstall = Path::new(&config.install_path).join("uninstall.exe");
-    if editor.exists() {
+    if let Some(source_engine) = find_editor_launcher_source() {
+        fs::copy(&source_engine, &engine)?;
+        installer_log_service::append_installer_log(&format!("Copied editor launcher {} to {}", source_engine.display(), engine.display()))?;
+    } else if editor.exists() {
         fs::copy(&editor, &engine)?;
+        installer_log_service::append_installer_log("Copied forge_editor_core.exe as ForgeEngine.exe fallback")?;
+    }
+    if editor.exists() {
         fs::copy(&editor, &hub)?;
         fs::copy(&editor, &uninstall)?;
     }
     Ok(())
+}
+
+fn find_editor_launcher_source() -> Option<std::path::PathBuf> {
+    let cwd = std::env::current_dir().ok()?;
+    [
+        cwd.join("artifacts\\windows\\ForgeEngine.exe"),
+        cwd.join("target\\release\\ForgeEngine.exe"),
+    ]
+    .into_iter()
+    .find(|path| path.exists())
 }
 
 fn persist_state(config: &InstallConfig, health_checks: Vec<crate::models::health::HealthCheckResult>, errors: Vec<String>) -> Result<()> {

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { AppShell } from "./components/shell/AppShell";
 import { InstallerShell } from "./components/InstallerShell";
 import { installerApi } from "./lib/installerTauri";
 import { useInstallerStore } from "./stores/useInstallerStore";
@@ -15,6 +16,10 @@ import { HealthCheckScreen } from "./screens/HealthCheckScreen";
 import { CompleteScreen } from "./screens/CompleteScreen";
 
 export default function App() {
+  if (import.meta.env.VITE_FORGE_APP === "editor") {
+    return <AppShell />;
+  }
+
   const { step, set } = useInstallerStore();
 
   useEffect(() => {

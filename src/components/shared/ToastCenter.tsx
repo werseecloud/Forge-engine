@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 export interface ToastMessage {
   id: string;
-  tone: "info" | "success" | "error";
+  tone: "info" | "success" | "warning" | "error";
   message: string;
 }
 
@@ -29,4 +29,3 @@ export function ToastCenter({ toasts }: ToastCenterProps) {
     </div>
   );
 }
-

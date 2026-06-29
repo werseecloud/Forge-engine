@@ -152,7 +152,7 @@ export function AppShell() {
   return (
     <motion.div className="app-shell" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <WindowsTitleBar />
-      <TopToolbar onCreateProject={() => setCreateProjectOpen(true)} onOpenProject={openProject} onSettings={() => setSettingsOpen(true)} onSave={saveActiveLevel} />
+      <TopToolbar onCreateProject={() => setCreateProjectOpen(true)} onOpenProject={openProject} onSettings={() => setSettingsOpen(true)} onSave={saveActiveLevel} onNotify={toast} />
       <main className="editor-grid">
         <LeftDock onCreateLevel={() => setCreateLevelOpen(true)} />
         <div className="center-stack">

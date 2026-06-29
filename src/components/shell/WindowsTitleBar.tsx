@@ -4,7 +4,8 @@ import { useProjectStore } from "../../stores/useProjectStore";
 
 export function WindowsTitleBar() {
   const currentProject = useProjectStore((state) => state.currentProject);
-  const appWindow = getCurrentWindow();
+  const canUseTauriWindow = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+  const appWindow = canUseTauriWindow ? getCurrentWindow() : null;
   const title = currentProject ? `Forge Engine 1.0.0 - ${currentProject.projectName}` : "Forge Engine 1.0.0";
 
   return (
@@ -14,11 +15,10 @@ export function WindowsTitleBar() {
         <span>{title}</span>
       </div>
       <div className="window-controls">
-        <button aria-label="Minimize" onClick={() => appWindow.minimize()}><Minus size={15} /></button>
-        <button aria-label="Maximize" onClick={() => appWindow.toggleMaximize()}><Square size={13} /></button>
-        <button aria-label="Close" onClick={() => appWindow.close()}><X size={16} /></button>
+        <button aria-label="Minimize" onClick={() => void appWindow?.minimize()}><Minus size={15} /></button>
+        <button aria-label="Maximize" onClick={() => void appWindow?.toggleMaximize()}><Square size={13} /></button>
+        <button aria-label="Close" onClick={() => void appWindow?.close()}><X size={16} /></button>
       </div>
     </div>
   );
 }
-
