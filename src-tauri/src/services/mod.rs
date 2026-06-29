@@ -4,4 +4,13 @@ pub mod log_service;
 pub mod project_service;
 pub mod scene_service;
 pub mod settings_service;
-
+pub mod installer_log_service;
+pub mod installer_system_service;
+pub mod installer_component_service;
+pub mod installer_manifest_service;
+pub mod installer_settings_service;
+pub mod installer_health_service;
+pub mod installer_folder_service;
+pub mod installer_shortcut_service;
+pub mod installer_association_service;
+pub mod installer_service;

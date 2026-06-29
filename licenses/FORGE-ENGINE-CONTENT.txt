@@ -1,0 +1,5 @@
+Forge Engine starter content placeholder license.
+
+The files in this starter pack are local Forge Engine project descriptors,
+materials, and shader sources created for this repository.
+

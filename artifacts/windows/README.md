@@ -9,6 +9,11 @@ npm run tauri:build
 Installer:
 
 ```text
-Forge Engine_1.0.0_x64-setup.exe
+Forge Engine Setup_1.0.0_x64-setup.exe
 ```
 
+Direct setup app:
+
+```text
+forge_installer.exe
+```

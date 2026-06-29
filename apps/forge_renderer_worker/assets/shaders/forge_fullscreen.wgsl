@@ -1,0 +1,22 @@
+struct VertexOut {
+    @builtin(position) position: vec4<f32>,
+    @location(0) uv: vec2<f32>,
+};
+
+@vertex
+fn vs_main(@builtin(vertex_index) vertex_index: u32) -> VertexOut {
+    var positions = array<vec2<f32>, 3>(
+        vec2<f32>(-1.0, -3.0),
+        vec2<f32>(3.0, 1.0),
+        vec2<f32>(-1.0, 1.0)
+    );
+    var out: VertexOut;
+    out.position = vec4<f32>(positions[vertex_index], 0.0, 1.0);
+    out.uv = (positions[vertex_index] + vec2<f32>(1.0, 1.0)) * 0.5;
+    return out;
+}
+
+@fragment
+fn fs_main(in: VertexOut) -> @location(0) vec4<f32> {
+    return vec4<f32>(0.03 + in.uv.x * 0.08, 0.08 + in.uv.y * 0.12, 0.16, 1.0);
+}

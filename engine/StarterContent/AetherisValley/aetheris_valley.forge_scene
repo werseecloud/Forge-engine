@@ -1,0 +1,18 @@
+{
+  "scene_name": "Aetheris Valley",
+  "engine_version": "1.0.0",
+  "description": "Local starter environment for Forge Engine preview and first project creation.",
+  "environment": {
+    "sky": "storm_break_sunset",
+    "terrain": "procedural_valley",
+    "water": "river_lowland",
+    "lighting": "directional_sun_with_fog"
+  },
+  "objects": [
+    { "name": "SM_Tower_Main", "type": "static_mesh", "material": "M_Stone_Weathered" },
+    { "name": "SM_River_Plane", "type": "water_surface", "material": "M_River_Blue" },
+    { "name": "SM_Rock_Field", "type": "instanced_mesh", "material": "M_Rock_Dark" },
+    { "name": "SM_Pine_Cluster", "type": "instanced_mesh", "material": "M_Foliage_Pine" }
+  ]
+}
+

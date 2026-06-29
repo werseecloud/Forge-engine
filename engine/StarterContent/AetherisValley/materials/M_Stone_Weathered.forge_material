@@ -1,0 +1,8 @@
+{
+  "name": "M_Stone_Weathered",
+  "workflow": "pbr",
+  "base_color": [0.45, 0.47, 0.48, 1.0],
+  "roughness": 0.82,
+  "metallic": 0.02
+}
+

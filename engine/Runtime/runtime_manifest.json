@@ -1,0 +1,7 @@
+{
+  "runtime_version": "1.0.0",
+  "local_only": true,
+  "renderer_backend": "wgpu",
+  "health_check": "--health-check"
+}
+

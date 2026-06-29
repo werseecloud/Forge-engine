@@ -4,4 +4,13 @@ pub mod log_commands;
 pub mod project_commands;
 pub mod scene_commands;
 pub mod settings_commands;
-
+pub mod system_commands;
+pub mod installer_commands;
+pub mod component_commands;
+pub mod folder_commands;
+pub mod manifest_commands;
+pub mod installer_settings_commands;
+pub mod shortcut_commands;
+pub mod association_commands;
+pub mod health_commands;
+pub mod installer_log_commands;

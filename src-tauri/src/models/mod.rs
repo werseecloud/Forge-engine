@@ -3,4 +3,9 @@ pub mod fs;
 pub mod project;
 pub mod scene;
 pub mod settings;
-
+pub mod installer;
+pub mod component;
+pub mod manifest;
+pub mod health;
+pub mod checks;
+pub mod errors;

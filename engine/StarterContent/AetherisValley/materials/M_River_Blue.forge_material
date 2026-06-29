@@ -1,0 +1,9 @@
+{
+  "name": "M_River_Blue",
+  "workflow": "pbr",
+  "base_color": [0.06, 0.32, 0.58, 0.72],
+  "roughness": 0.08,
+  "metallic": 0.1,
+  "transparent": true
+}
+

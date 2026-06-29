@@ -1,0 +1,11 @@
+[workspace]
+members = [
+  "src-tauri",
+  "apps/forge_editor_core",
+  "apps/forge_runtime",
+  "apps/forge_renderer_worker",
+  "apps/forge_shader_worker",
+  "apps/forge_asset_worker",
+  "apps/forge_build_worker"
+]
+resolver = "2"
