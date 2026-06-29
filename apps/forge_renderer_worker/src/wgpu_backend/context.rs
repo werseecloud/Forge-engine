@@ -11,6 +11,7 @@ pub struct GpuInfo {
     pub device_type: String,
     pub driver: Option<String>,
     pub driver_info: Option<String>,
+    pub ray_tracing_supported: bool,
 }
 
 pub struct WgpuContext {
@@ -24,7 +25,7 @@ pub struct WgpuContext {
 impl WgpuContext {
     pub async fn initialize() -> Result<Self, GpuInitError> {
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::all(),
+            backends: wgpu::Backends::DX12,
             flags: wgpu::InstanceFlags::default(),
             dx12_shader_compiler: Default::default(),
             gles_minor_version: wgpu::Gles3MinorVersion::Automatic,
@@ -65,6 +66,7 @@ impl WgpuContext {
                 device_type: format!("{:?}", info.device_type),
                 driver: Some(info.driver),
                 driver_info: Some(info.driver_info),
+                ray_tracing_supported: false,
             },
         })
     }

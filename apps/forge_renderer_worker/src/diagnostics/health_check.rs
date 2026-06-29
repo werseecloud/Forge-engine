@@ -14,6 +14,7 @@ pub struct HealthCheckReport {
     pub device: Option<u32>,
     pub driver: Option<String>,
     pub shader_library_ok: bool,
+    pub ray_tracing_supported: bool,
     pub error: Option<String>,
 }
 
@@ -32,6 +33,7 @@ pub async fn run_health_check() -> HealthCheckReport {
             shader_library_ok: crate::shaders::library::ShaderLibrary::default()
                 .scan_default_library()
                 .is_ok(),
+            ray_tracing_supported: context.gpu_info.ray_tracing_supported,
             error: None,
         },
         Err(error) => HealthCheckReport {
@@ -45,6 +47,7 @@ pub async fn run_health_check() -> HealthCheckReport {
             device: None,
             driver: None,
             shader_library_ok: false,
+            ray_tracing_supported: false,
             error: Some(error.to_string()),
         },
     }

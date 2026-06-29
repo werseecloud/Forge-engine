@@ -256,6 +256,67 @@ footer button:first-child { margin-right: auto; }
 .windows-titlebar__actions button:hover,
 .window-controls button:hover { background: rgba(255,255,255,.08); }
 .window-controls button:last-child:hover { background: #B92F2F; color: white; }
+.title-menu {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 18px;
+  margin-right: auto;
+}
+.title-menu__item {
+  position: relative;
+}
+.title-menu__button {
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255,255,255,.76);
+  transition: background .15s ease, color .15s ease;
+}
+.title-menu__button:hover,
+.title-menu__button.is-open {
+  background: rgba(255,255,255,.09);
+  color: #fff;
+}
+.title-dropdown {
+  position: absolute;
+  top: 31px;
+  left: 0;
+  z-index: 80;
+  width: 218px;
+  padding: 6px;
+  border-radius: 12px;
+  background: #10161D;
+  border: 1px solid rgba(255,255,255,.1);
+  box-shadow: 0 20px 60px rgba(0,0,0,.48);
+}
+.title-dropdown__button {
+  width: 100%;
+  min-height: 32px;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 0 9px;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255,255,255,.82);
+  text-align: left;
+}
+.title-dropdown__button:hover:not(:disabled) {
+  background: rgba(30,123,255,.16);
+  color: #fff;
+}
+.title-dropdown__button em {
+  font-style: normal;
+  color: rgba(255,255,255,.42);
+  font-size: 11px;
+}
 .top-toolbar {
   display: flex;
   align-items: center;
