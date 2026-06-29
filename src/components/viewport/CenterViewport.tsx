@@ -89,18 +89,18 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
     function syncSceneObjects() {
       objectGroup.clear();
       activeLevel?.objects.forEach((object, index) => {
-        const marker = new THREE.Mesh(
-          new THREE.BoxGeometry(0.85, 0.85, 0.85),
-          new THREE.MeshStandardMaterial({
-            color: object.visible ? 0x2997ff : 0x6b7280,
-            emissive: object.visible ? 0x062a66 : 0x000000,
-            roughness: 0.45,
-            metalness: 0.35
-          })
-        );
-        marker.castShadow = true;
+        const layer = activeLevel.layers.find((item) => item.id === object.layer);
+        if (layer && !layer.visible) return;
+        const marker = createSceneObjectMarker(object);
         const angle = index * 1.83;
-        marker.position.set(Math.cos(angle) * 5.5, 1.2, Math.sin(angle) * 4.2);
+        const transform = object.transform;
+        marker.position.set(
+          transform?.position.x ?? Math.cos(angle) * 5.5,
+          transform?.position.y ?? 1.2,
+          transform?.position.z ?? Math.sin(angle) * 4.2
+        );
+        marker.rotation.set(transform?.rotation.x ?? 0, transform?.rotation.y ?? 0, transform?.rotation.z ?? 0);
+        marker.scale.set(transform?.scale.x ?? 1, transform?.scale.y ?? 1, transform?.scale.z ?? 1);
         objectGroup.add(marker);
       });
     }
@@ -132,7 +132,7 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
         else material?.dispose?.();
       });
     };
-  }, [activeLevel?.objects, orbit, setFps]);
+  }, [activeLevel?.layers, activeLevel?.objects, orbit, setFps]);
 
   async function dropAsset(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
@@ -290,4 +290,52 @@ function createEnvironmentDetails() {
     group.add(tree);
   }
   return group;
+}
+
+function createSceneObjectMarker(object: import("../../types/scene").SceneObject) {
+  const componentTypes = object.components.map((component) => component.componentType.toLowerCase());
+  const primitive = String(object.components.find((component) => component.componentType === "StaticMesh")?.data.primitive ?? object.assetReference ?? "");
+  const disabled = !object.visible;
+  const material = new THREE.MeshStandardMaterial({
+    color: disabled ? 0x6b7280 : componentTypes.some((type) => type.includes("light")) ? 0xffd60a : componentTypes.includes("playerstart") ? 0x30d158 : 0x2997ff,
+    emissive: disabled ? 0x000000 : componentTypes.some((type) => type.includes("light")) ? 0x332400 : 0x062a66,
+    roughness: 0.45,
+    metalness: 0.2
+  });
+
+  if (componentTypes.includes("camera")) {
+    const group = new THREE.Group();
+    group.add(new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.55, 0.55), material));
+    const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 0.35, 16), material);
+    lens.rotateX(Math.PI / 2);
+    lens.position.z = -0.42;
+    group.add(lens);
+    return group;
+  }
+  if (componentTypes.some((type) => type.includes("light"))) {
+    const group = new THREE.Group();
+    group.add(new THREE.Mesh(new THREE.SphereGeometry(0.38, 24, 16), material));
+    const glow = new THREE.PointLight(0xffd60a, 1.8, 8);
+    group.add(glow);
+    return group;
+  }
+  if (componentTypes.includes("playerstart")) {
+    const group = new THREE.Group();
+    group.add(new THREE.Mesh(new THREE.CapsuleGeometry(0.32, 0.9, 6, 12), material));
+    return group;
+  }
+  if (primitive.includes("sphere")) {
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.55, 28, 18), material);
+    mesh.castShadow = true;
+    return mesh;
+  }
+  if (primitive.includes("plane")) {
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.4), material);
+    mesh.rotateX(-Math.PI / 2);
+    mesh.receiveShadow = true;
+    return mesh;
+  }
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.9), material);
+  mesh.castShadow = true;
+  return mesh;
 }

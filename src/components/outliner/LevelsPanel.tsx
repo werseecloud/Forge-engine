@@ -36,14 +36,19 @@ export function LevelsPanel({ onCreateLevel }: LevelsPanelProps) {
   }
 
   return (
-    <div className="tree-list">
+    <div className="levels-panel">
+      <div className="panel-title-row">
+        <h3>Levels</h3>
+        <PillButton active onClick={onCreateLevel} icon={<Plus size={15} />}>New</PillButton>
+      </div>
+      <div className="tree-list">
       {levels.map((level) => (
         <button key={level.path} className={activeLevel?.path === level.path ? "tree-row is-selected" : "tree-row"} onClick={() => openLevel(level.relativePath)}>
           <Layers3 size={15} />
           <span>{level.name}</span>
         </button>
       ))}
+      </div>
     </div>
   );
 }
-

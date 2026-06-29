@@ -22,6 +22,7 @@ import { SettingsModal } from "../modals/SettingsModal";
 import { StatusBar } from "./StatusBar";
 import { TopToolbar } from "./TopToolbar";
 import { WindowsTitleBar } from "./WindowsTitleBar";
+import { EngineStartupSplash } from "./EngineStartupSplash";
 
 export function AppShell() {
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
@@ -198,6 +199,12 @@ export function AppShell() {
       <AnimatePresence>
         <ToastCenter toasts={toasts} />
       </AnimatePresence>
+      <EngineStartupSplash
+        onComplete={(steps) => {
+          const failed = steps.filter((step) => step.status !== "ok");
+          failed.length > 0 ? toast("warning", `${failed.length} engine service check(s) need attention.`) : toast("success", "Engine services ready.");
+        }}
+      />
     </motion.div>
   );
 }

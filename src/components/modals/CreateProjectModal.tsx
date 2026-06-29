@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, ChevronLeft, ChevronRight, FolderTree, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { commands } from "../../lib/tauri";
 import type { CreateProjectRequest, OpenProjectResponse } from "../../types/project";
 import { PathPicker } from "../shared/PathPicker";
@@ -36,6 +36,12 @@ export function CreateProjectModal({ open, defaultLocation, onClose, onCreated, 
     const safe = (form.projectName.trim() || "Untitled").replace(/[^\w -]+/g, "_").replace(/\s+/g, "_");
     return `${form.location}\\${safe}`;
   }, [form.location, form.projectName]);
+
+  useEffect(() => {
+    if (open && defaultLocation && !form.location) {
+      setForm((current) => ({ ...current, location: defaultLocation }));
+    }
+  }, [defaultLocation, form.location, open]);
 
   async function create() {
     if (!form.projectName.trim()) {
@@ -199,4 +205,3 @@ export function CreateProjectModal({ open, defaultLocation, onClose, onCreated, 
     </AnimatePresence>
   );
 }
-

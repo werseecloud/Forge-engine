@@ -14,3 +14,4 @@ pub mod shortcut_commands;
 pub mod association_commands;
 pub mod health_commands;
 pub mod installer_log_commands;
+pub mod engine_commands;

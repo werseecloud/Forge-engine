@@ -5,6 +5,14 @@ import type { CreateProjectRequest, OpenProjectResponse, ProjectSummary, Project
 import type { SceneLevel, SceneObject, LevelSummary } from "../types/scene";
 import type { AppSettings } from "../types/settings";
 
+export interface EngineBootStep {
+  component: string;
+  command: string;
+  status: string;
+  stdout: string;
+  stderr: string;
+}
+
 export const commands = {
   ensureAppDirectories: () => invoke<AppDirectories>("ensure_app_directories"),
   chooseDirectory: () => invoke<string | null>("choose_directory"),
@@ -58,5 +66,6 @@ export const commands = {
   readOutputLog: () => invoke<string[]>("read_output_log"),
   appendOutputLog: (message: string) => invoke<string>("append_output_log", { message }),
   clearOutputLog: () => invoke<void>("clear_output_log")
+  ,
+  startEngineServices: () => invoke<EngineBootStep[]>("start_engine_services")
 };
-

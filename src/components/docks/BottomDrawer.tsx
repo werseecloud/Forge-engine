@@ -4,6 +4,7 @@ import { ConsolePanel } from "../content/ConsolePanel";
 import { ContentBrowser } from "../content/ContentBrowser";
 import { ContentTabs } from "../content/ContentTabs";
 import { OutputLog } from "../content/OutputLog";
+import { AnimationTimeline } from "../content/AnimationTimeline";
 import { useAppStore } from "../../stores/useAppStore";
 
 interface BottomDrawerProps {
@@ -26,11 +27,8 @@ export function BottomDrawer({ onImportStatus, onRefresh, onError, onSuccess }: 
         {activeContentTab === "Blueprints" ? <BlueprintsPanel /> : null}
         {activeContentTab === "Output Log" ? <OutputLog /> : null}
         {activeContentTab === "Console" ? <ConsolePanel /> : null}
-        {activeContentTab === "Animation Timeline" ? (
-          <EmptyState title="No animation timeline" detail="Animation tracks will appear after opening a level object with animation data." />
-        ) : null}
+        {activeContentTab === "Animation Timeline" ? <AnimationTimeline /> : null}
       </div>
     </section>
   );
 }
-
