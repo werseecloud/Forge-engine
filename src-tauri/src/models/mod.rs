@@ -9,3 +9,4 @@ pub mod manifest;
 pub mod health;
 pub mod checks;
 pub mod errors;
+pub mod blueprint;

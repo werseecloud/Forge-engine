@@ -93,7 +93,15 @@ pub fn run() {
             commands::renderer_commands::get_gpu_stats,
             commands::renderer_commands::get_renderer_feature_matrix,
             commands::renderer_commands::reset_path_tracing_accumulation,
-            commands::skybox_commands::get_embedded_skybox_manifest
+            commands::skybox_commands::get_embedded_skybox_manifest,
+            commands::blueprint_commands::list_blueprint_graphs,
+            commands::blueprint_commands::create_blueprint_graph,
+            commands::blueprint_commands::read_blueprint_graph,
+            commands::blueprint_commands::save_blueprint_graph,
+            commands::blueprint_commands::delete_blueprint_graph,
+            commands::blueprint_commands::duplicate_blueprint_graph,
+            commands::blueprint_commands::compile_blueprint_graph,
+            commands::blueprint_commands::run_blueprint_preview
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Forge Engine editor");

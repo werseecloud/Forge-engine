@@ -12,13 +12,14 @@ import { PillButton } from "../shared/PillButton";
 interface TopToolbarProps {
   onCreateProject: () => void;
   onOpenProject: () => void;
+  onBlueprints: () => void;
   onGraphicsSettings: () => void;
   onSettings: () => void;
   onSave: () => void;
   onNotify: (tone: "success" | "warning" | "error", message: string) => void;
 }
 
-export function TopToolbar({ onCreateProject, onOpenProject, onGraphicsSettings, onSettings, onSave, onNotify }: TopToolbarProps) {
+export function TopToolbar({ onCreateProject, onOpenProject, onBlueprints, onGraphicsSettings, onSettings, onSave, onNotify }: TopToolbarProps) {
   const currentProject = useProjectStore((state) => state.currentProject);
   const editorMode = useEditorModeStore((state) => state.mode);
   const enterPlayMode = useEditorModeStore((state) => state.enterPlayMode);
@@ -80,6 +81,7 @@ export function TopToolbar({ onCreateProject, onOpenProject, onGraphicsSettings,
   }
 
   function openBlueprintGraph() {
+    onBlueprints();
     setActiveContentTab("Blueprints");
     onNotify("success", selectedSceneObject ? `Opened graph context for ${selectedSceneObject.name}.` : "Opened Blueprint browser.");
   }
@@ -117,6 +119,7 @@ export function TopToolbar({ onCreateProject, onOpenProject, onGraphicsSettings,
       <div className="toolbar-spacer" />
 
       <div className="toolbar-group">
+        <PillButton onClick={onBlueprints} icon={<GitBranch size={15} />}>Blueprints</PillButton>
         <PillButton onClick={onGraphicsSettings} icon={<MonitorCog size={15} />}>Graphics</PillButton>
         <PillButton onClick={onSettings} icon={<Settings size={15} />}>Settings</PillButton>
         <IconButton label="Local profile"><UserCircle size={19} /></IconButton>

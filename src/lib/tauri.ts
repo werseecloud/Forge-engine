@@ -4,6 +4,7 @@ import type { DirectoryNode, WatcherStatus } from "../types/fs";
 import type { CreateProjectRequest, OpenProjectResponse, ProjectSummary, ProjectValidation, AppDirectories } from "../types/project";
 import type { SceneLevel, SceneObject, LevelSummary } from "../types/scene";
 import type { AppSettings } from "../types/settings";
+import type { BlueprintCompileResult, BlueprintGraph, BlueprintGraphSummary, BlueprintRunResult } from "../features/blueprints/types/blueprint-types";
 
 export interface EngineBootStep {
   component: string;
@@ -67,5 +68,19 @@ export const commands = {
   appendOutputLog: (message: string) => invoke<string>("append_output_log", { message }),
   clearOutputLog: () => invoke<void>("clear_output_log")
   ,
-  startEngineServices: () => invoke<EngineBootStep[]>("start_engine_services")
+  startEngineServices: () => invoke<EngineBootStep[]>("start_engine_services"),
+
+  listBlueprintGraphs: (projectRoot: string) => invoke<BlueprintGraphSummary[]>("list_blueprint_graphs", { projectRoot }),
+  createBlueprintGraph: (projectRoot: string, name: string, graphType: string) =>
+    invoke<BlueprintGraph>("create_blueprint_graph", { projectRoot, name, graphType }),
+  readBlueprintGraph: (projectRoot: string, relativePath: string) =>
+    invoke<BlueprintGraph>("read_blueprint_graph", { projectRoot, relativePath }),
+  saveBlueprintGraph: (projectRoot: string, graph: BlueprintGraph) =>
+    invoke<BlueprintGraph>("save_blueprint_graph", { projectRoot, graph }),
+  deleteBlueprintGraph: (projectRoot: string, relativePath: string) =>
+    invoke<void>("delete_blueprint_graph", { projectRoot, relativePath }),
+  duplicateBlueprintGraph: (projectRoot: string, relativePath: string, newName: string) =>
+    invoke<BlueprintGraph>("duplicate_blueprint_graph", { projectRoot, relativePath, newName }),
+  compileBlueprintGraph: (graph: BlueprintGraph) => invoke<BlueprintCompileResult>("compile_blueprint_graph", { graph }),
+  runBlueprintPreview: (graph: BlueprintGraph) => invoke<BlueprintRunResult>("run_blueprint_preview", { graph })
 };

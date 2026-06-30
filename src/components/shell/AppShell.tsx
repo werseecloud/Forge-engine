@@ -24,6 +24,7 @@ import { StatusBar } from "./StatusBar";
 import { TopToolbar } from "./TopToolbar";
 import { WindowsTitleBar } from "./WindowsTitleBar";
 import { EngineStartupSplash } from "./EngineStartupSplash";
+import { BlueprintsPage } from "../../features/blueprints/BlueprintsPage";
 
 export function AppShell() {
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
@@ -36,6 +37,8 @@ export function AppShell() {
   const [lastImportStatus, setLastImportStatus] = useState("");
 
   const setAppReady = useAppStore((state) => state.setAppReady);
+  const activePanel = useAppStore((state) => state.activePanel);
+  const setActivePanel = useAppStore((state) => state.setActivePanel);
   const selectAsset = useAppStore((state) => state.selectAsset);
   const selectEntity = useAppStore((state) => state.selectEntity);
   const currentProject = useProjectStore((state) => state.currentProject);
@@ -163,24 +166,34 @@ export function AppShell() {
       <TopToolbar
         onCreateProject={() => setCreateProjectOpen(true)}
         onOpenProject={openProject}
+        onBlueprints={() => setActivePanel("blueprints")}
         onGraphicsSettings={() => setGraphicsSettingsOpen(true)}
         onSettings={() => setSettingsOpen(true)}
         onSave={saveActiveLevel}
         onNotify={toast}
       />
-      <main className="editor-grid">
-        <LeftDock onCreateLevel={() => setCreateLevelOpen(true)} />
-        <div className="center-stack">
-          <CenterViewport fps={fps} setFps={setFps} onCreateProject={() => setCreateProjectOpen(true)} onOpenProject={openProject} onCreateLevel={() => setCreateLevelOpen(true)} onError={(message) => toast("error", message)} />
-          <BottomDrawer
-            onImportStatus={setLastImportStatus}
-            onError={(message) => toast("error", message)}
-            onSuccess={(message) => toast("success", message)}
-            onRefresh={refreshProjectData}
-          />
-        </div>
-        <RightDock onError={(message) => toast("error", message)} />
-      </main>
+      {activePanel === "blueprints" ? (
+        <BlueprintsPage
+          projectRoot={projectRoot}
+          onClose={() => setActivePanel("editor")}
+          onError={(message) => toast("error", message)}
+          onSuccess={(message) => toast("success", message)}
+        />
+      ) : (
+        <main className="editor-grid">
+          <LeftDock onCreateLevel={() => setCreateLevelOpen(true)} />
+          <div className="center-stack">
+            <CenterViewport fps={fps} setFps={setFps} onCreateProject={() => setCreateProjectOpen(true)} onOpenProject={openProject} onCreateLevel={() => setCreateLevelOpen(true)} onError={(message) => toast("error", message)} />
+            <BottomDrawer
+              onImportStatus={setLastImportStatus}
+              onError={(message) => toast("error", message)}
+              onSuccess={(message) => toast("success", message)}
+              onRefresh={refreshProjectData}
+            />
+          </div>
+          <RightDock onError={(message) => toast("error", message)} />
+        </main>
+      )}
       <StatusBar fps={fps} watcher={watcher} lastImportStatus={lastImportStatus} />
 
       <CreateProjectModal
