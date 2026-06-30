@@ -12,8 +12,8 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sign-build-artifacts.ps1",
     "tauri:build:unsigned": "set FORGE_ALLOW_UNSIGNED=1&& tauri build",
-    "tauri:build:editor": "tauri build --config src-tauri/tauri.editor.conf.json --no-bundle && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/sign-build-artifacts.ps1",
-    "tauri:build:editor:unsigned": "set FORGE_ALLOW_UNSIGNED=1&& tauri build --config src-tauri/tauri.editor.conf.json --no-bundle"
+    "tauri:build:editor": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-forge-engine-editor-artifact.ps1",
+    "tauri:build:editor:unsigned": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-forge-engine-editor-artifact.ps1 -Unsigned"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.5.0",
