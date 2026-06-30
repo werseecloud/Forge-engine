@@ -14,6 +14,10 @@ pub enum RayTracingTier {
 pub struct RayTracingSupport {
     pub tier: RayTracingTier,
     pub reason: String,
+    pub dxr_available: bool,
+    pub vulkan_rt_available: bool,
+    pub metal_rt_available: bool,
+    pub compute_bvh_fallback_available: bool,
 }
 
 impl RayTracingSupport {
@@ -21,6 +25,21 @@ impl RayTracingSupport {
         Self {
             tier: RayTracingTier::Unsupported,
             reason: reason.into(),
+            dxr_available: false,
+            vulkan_rt_available: false,
+            metal_rt_available: false,
+            compute_bvh_fallback_available: false,
+        }
+    }
+
+    pub fn compute_fallback(reason: impl Into<String>) -> Self {
+        Self {
+            tier: RayTracingTier::ComputeBvhFallback,
+            reason: reason.into(),
+            dxr_available: false,
+            vulkan_rt_available: false,
+            metal_rt_available: false,
+            compute_bvh_fallback_available: true,
         }
     }
 }

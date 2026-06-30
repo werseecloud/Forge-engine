@@ -11,6 +11,32 @@ pub struct PathTracingSettings {
     pub environment_intensity: f32,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PathTracingAccumulation {
+    pub frame_index: u64,
+    pub accumulated_samples: u32,
+    pub reset_requested: bool,
+}
+
+impl PathTracingAccumulation {
+    pub fn reset(&mut self) {
+        self.frame_index = 0;
+        self.accumulated_samples = 0;
+        self.reset_requested = true;
+    }
+}
+
+impl Default for PathTracingAccumulation {
+    fn default() -> Self {
+        Self {
+            frame_index: 0,
+            accumulated_samples: 0,
+            reset_requested: false,
+        }
+    }
+}
+
 impl Default for PathTracingSettings {
     fn default() -> Self {
         Self {

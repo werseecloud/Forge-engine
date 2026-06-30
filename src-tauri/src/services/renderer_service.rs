@@ -1,5 +1,5 @@
 use anyhow::Result;
-use forge_renderer::{GpuStats, GraphicsSettings, RendererPath};
+use forge_renderer::{GpuStats, GraphicsSettings, RendererFeatureMatrix, RendererPath};
 use forge_rhi::BackendCapabilities;
 
 use crate::services::{log_service, settings_service};
@@ -45,6 +45,12 @@ pub fn get_gpu_stats() -> Result<GpuStats> {
         adapter_name: Some(capabilities.adapter_name),
         ..GpuStats::default()
     })
+}
+
+pub fn get_renderer_feature_matrix() -> Result<RendererFeatureMatrix> {
+    let capabilities =
+        get_backend_capabilities().unwrap_or_else(|_| BackendCapabilities::conservative_software());
+    Ok(RendererFeatureMatrix::from_capabilities(&capabilities))
 }
 
 pub fn reset_path_tracing_accumulation() -> Result<String> {

@@ -5,7 +5,8 @@ use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 use crate::models::scene::{
-    CreateLevelRequest, LevelSummary, SceneLevel, SceneObject, Transform, Vec3, WorldLayer,
+    CreateLevelRequest, LevelSummary, SceneComponent, SceneLevel, SceneObject, Transform, Vec3,
+    WorldLayer,
 };
 use crate::services::log_service;
 use crate::utils::ids::new_id;
@@ -35,19 +36,42 @@ pub fn create_level_at_root(project_root: &Path, name: &str) -> Result<LevelSumm
     }
 
     let now = Utc::now().to_rfc3339();
+    let default_layer = WorldLayer {
+        id: new_id("layer"),
+        name: "Default Layer".to_string(),
+        visible: true,
+        color: "#2997FF".to_string(),
+    };
+    let skybox = SceneObject {
+        id: new_id("entity"),
+        name: "Skybox".to_string(),
+        tags: vec!["environment".to_string(), "skybox".to_string()],
+        layer: Some(default_layer.id.clone()),
+        visible: true,
+        asset_reference: Some("skyboxes/citrus_orchard_puresky".to_string()),
+        transform: None,
+        components: vec![SceneComponent {
+            component_type: "Skybox".to_string(),
+            data: serde_json::json!({
+                "enabled": true,
+                "assetId": "citrus_orchard_puresky",
+                "resolution": "Auto",
+                "intensity": 1.0,
+                "blur": 0.0,
+                "rotation": 0.0,
+                "showAsBackground": true
+            }),
+        }],
+    };
+
     let level = SceneLevel {
         level_id: new_id("level"),
         name: name.to_string(),
         path: path.to_string_lossy().to_string(),
         created_at: now.clone(),
         updated_at: now,
-        layers: vec![WorldLayer {
-            id: new_id("layer"),
-            name: "Default Layer".to_string(),
-            visible: true,
-            color: "#2997FF".to_string(),
-        }],
-        objects: Vec::new(),
+        layers: vec![default_layer],
+        objects: vec![skybox],
     };
     write_json_pretty(&path, &level)?;
     level_summary(project_root, &path)

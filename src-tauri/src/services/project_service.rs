@@ -217,6 +217,7 @@ fn create_project_folders(root: &Path) -> Result<()> {
         "Content/Materials",
         "Content/Meshes",
         "Content/Textures",
+        "Content/Skyboxes",
         "Content/Audio",
         "Content/Animations",
         "Content/UI",

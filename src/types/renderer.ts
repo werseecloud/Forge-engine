@@ -89,3 +89,17 @@ export interface GpuStats {
   backendName: string;
   adapterName: string | null;
 }
+
+export type FeatureStatus = "Implemented" | "Partial" | "Planned" | "Unsupported";
+
+export interface RendererFeatureMatrix {
+  deferredGbuffer: FeatureStatus;
+  clusteredForwardPlus: FeatureStatus;
+  ssao: FeatureStatus;
+  ssr: FeatureStatus;
+  progressivePathTracing: FeatureStatus;
+  computeBvhFallback: FeatureStatus;
+  hardwareRayTracingAbstraction: FeatureStatus;
+  mobileVulkanMetalDemo: FeatureStatus;
+  browserWebgpuDemo: FeatureStatus;
+}

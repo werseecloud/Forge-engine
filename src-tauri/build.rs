@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 fn main() {
     generate_embedded_workers();
+    generate_embedded_skyboxes();
     tauri_build::build();
 }
 
@@ -34,4 +35,11 @@ fn generate_embedded_workers() {
     }
     source.push_str("];\n");
     fs::write(output, source).expect("write embedded worker module");
+}
+
+fn generate_embedded_skyboxes() {
+    let out_dir = PathBuf::from(std::env::var("OUT_DIR").expect("OUT_DIR"));
+    let output = out_dir.join("embedded_skyboxes.rs");
+    let source = "pub const EMBEDDED_SKYBOX_PACK: &[u8] = &[];\n";
+    fs::write(output, source).expect("write embedded skybox module");
 }

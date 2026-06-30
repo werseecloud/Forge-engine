@@ -6,6 +6,7 @@ import { previewModes, useRuntimeStore, type PreviewMode } from "../../stores/us
 import { useSceneStore } from "../../stores/useSceneStore";
 import { useViewportToolStore, type ViewportTool } from "../../stores/useViewportToolStore";
 import { IconButton } from "../shared/IconButton";
+import { CustomSelect } from "../shared/CustomSelect";
 import { PillButton } from "../shared/PillButton";
 
 interface TopToolbarProps {
@@ -105,12 +106,7 @@ export function TopToolbar({ onCreateProject, onOpenProject, onGraphicsSettings,
       </div>
 
       <div className="toolbar-group toolbar-group--viewport">
-        <label className="toolbar-select" title="Preview mode">
-          <select value={previewMode} onChange={(event) => setPreviewMode(event.target.value as PreviewMode)}>
-            {previewModes.map((mode) => <option key={mode} value={mode}>{mode}</option>)}
-          </select>
-          <ChevronDown size={14} />
-        </label>
+        <CustomSelect className="custom-select--toolbar" value={previewMode} options={previewModes} onChange={(mode) => setPreviewMode(mode as PreviewMode)} />
         <IconButton label="Select tool" active={activeTool === "select"} onClick={() => activateTool("select")}><MousePointer2 size={16} /></IconButton>
         <IconButton label="Move tool" active={activeTool === "move"} onClick={() => activateTool("move")}><Move3D size={16} /></IconButton>
         <IconButton label="Rotate tool" active={activeTool === "rotate"} onClick={() => activateTool("rotate")}><RotateCcw size={16} /></IconButton>

@@ -1,6 +1,6 @@
 use crate::services::renderer_service;
 use crate::utils::errors::{command_error, CommandResult};
-use forge_renderer::{GpuStats, GraphicsSettings};
+use forge_renderer::{GpuStats, GraphicsSettings, RendererFeatureMatrix};
 use forge_rhi::BackendCapabilities;
 
 #[tauri::command]
@@ -21,6 +21,11 @@ pub fn update_renderer_settings(settings: GraphicsSettings) -> CommandResult<Gra
 #[tauri::command]
 pub fn get_gpu_stats() -> CommandResult<GpuStats> {
     renderer_service::get_gpu_stats().map_err(command_error)
+}
+
+#[tauri::command]
+pub fn get_renderer_feature_matrix() -> CommandResult<RendererFeatureMatrix> {
+    renderer_service::get_renderer_feature_matrix().map_err(command_error)
 }
 
 #[tauri::command]

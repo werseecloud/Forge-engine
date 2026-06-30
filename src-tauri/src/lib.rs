@@ -91,7 +91,9 @@ pub fn run() {
             commands::renderer_commands::get_renderer_settings,
             commands::renderer_commands::update_renderer_settings,
             commands::renderer_commands::get_gpu_stats,
-            commands::renderer_commands::reset_path_tracing_accumulation
+            commands::renderer_commands::get_renderer_feature_matrix,
+            commands::renderer_commands::reset_path_tracing_accumulation,
+            commands::skybox_commands::get_embedded_skybox_manifest
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Forge Engine editor");

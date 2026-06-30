@@ -3,6 +3,8 @@ import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } fr
 import type { DragEvent } from "react";
 import * as THREE from "three";
 import { TransformControls } from "three/examples/jsm/controls/TransformControls.js";
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+import { chooseSkyboxAsset, loadSkyboxManifest, normalizeSkyboxSettings, type SkyboxManifest } from "../../lib/skybox";
 import { commands } from "../../lib/tauri";
 import { useAppStore } from "../../stores/useAppStore";
 import { useProjectStore } from "../../stores/useProjectStore";
@@ -106,8 +108,7 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
     const mountElement = mount;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x05070a);
-    scene.fog = new THREE.FogExp2(0x081018, 0.028);
+    scene.background = new THREE.Color(0x09121d);
 
     const camera = new THREE.PerspectiveCamera(54, 1, 0.1, 300);
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance", preserveDrawingBuffer: true });
@@ -119,10 +120,10 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
     renderer.domElement.className = "viewport-canvas";
     mountElement.appendChild(renderer.domElement);
 
-    const hemi = new THREE.HemisphereLight(0xbfdcff, 0x172011, 1.25);
+    const hemi = new THREE.HemisphereLight(0xbfdcff, 0x253040, 1.05);
     scene.add(hemi);
-    const sun = new THREE.DirectionalLight(0xffd7a0, 4.2);
-    sun.position.set(-18, 24, 12);
+    const sun = new THREE.DirectionalLight(0xffffff, 2.2);
+    sun.position.set(-12, 20, 10);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
     scene.add(sun);
@@ -130,17 +131,33 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
     unlitFill.visible = false;
     scene.add(unlitFill);
 
-    const environmentGroup = new THREE.Group();
-    environmentGroup.add(createTerrain());
-    environmentGroup.add(createWater());
-    environmentGroup.add(createTower());
-    environmentGroup.add(createEnvironmentDetails());
-    scene.add(environmentGroup);
-    const grid = new THREE.GridHelper(64, 64, 0x1e7bff, 0x1d2733);
-    grid.position.y = 0.035;
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    const rgbeLoader = new RGBELoader();
+    let skyboxManifest: SkyboxManifest | null = null;
+    let activeSkyboxKey = "";
+    let activeSkyboxTexture: THREE.Texture | null = null;
+    void loadSkyboxManifest().then((manifest) => {
+      skyboxManifest = manifest;
+    }).catch((error) => onError(String(error)));
+
+    const grid = new THREE.GridHelper(128, 128, 0xd7d1c5, 0x8f8a80);
+    grid.position.y = 0;
     grid.material.transparent = true;
-    grid.material.opacity = 0.34;
+    grid.material.opacity = 0.58;
     scene.add(grid);
+    const gridPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(128, 128),
+      new THREE.MeshStandardMaterial({
+        color: 0xbcb5a8,
+        roughness: 0.82,
+        metalness: 0,
+        transparent: true,
+        opacity: 0.72
+      })
+    );
+    gridPlane.rotateX(-Math.PI / 2);
+    gridPlane.receiveShadow = true;
+    scene.add(gridPlane);
 
     const objectGroup = new THREE.Group();
     scene.add(objectGroup);
@@ -190,12 +207,13 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
       hemi.visible = lit;
       sun.visible = lit;
       unlitFill.visible = !lit;
-      environmentGroup.visible = options.showEnvironment;
       grid.visible = options.gridVisible;
+      gridPlane.visible = options.gridVisible;
 
       const level = activeLevelRef.current;
       const selected = selectedSceneObjectRef.current;
       const visibleIds = new Set<string>();
+      syncSkybox(level, options.showEnvironment);
 
       if (!level) {
         objectMap.forEach((object) => {
@@ -210,6 +228,7 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
       }
 
       level.objects.forEach((object, index) => {
+        if (isSkyboxObject(object)) return;
         const layer = level.layers.find((item) => item.id === object.layer);
         if (layer && !layer.visible) return;
         visibleIds.add(object.id);
@@ -251,6 +270,40 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
       } else {
         selectionBox.visible = false;
       }
+    }
+
+    function syncSkybox(level: import("../../types/scene").SceneLevel | null, showEnvironment: boolean) {
+      const skyboxObject = level?.objects.find(isSkyboxObject);
+      const component = skyboxObject?.components.find((item) => item.componentType === "Skybox");
+      const settings = normalizeSkyboxSettings(component?.data);
+      const asset = skyboxManifest && chooseSkyboxAsset(skyboxManifest, settings);
+      const enabled = Boolean(showEnvironment && skyboxObject?.visible && settings.enabled && asset);
+      if (!enabled || !asset) {
+        scene.environment = null;
+        scene.background = new THREE.Color(0x09121d);
+        activeSkyboxKey = "";
+        return;
+      }
+      const key = `${asset.path}:${settings.intensity}:${settings.blur}:${settings.showAsBackground}`;
+      renderer.toneMappingExposure = Math.max(0.1, settings.intensity);
+      scene.backgroundBlurriness = settings.blur;
+      scene.backgroundRotation.set(0, THREE.MathUtils.degToRad(settings.rotation), 0);
+      scene.environmentRotation.set(0, THREE.MathUtils.degToRad(settings.rotation), 0);
+      if (key === activeSkyboxKey) return;
+      activeSkyboxKey = key;
+      rgbeLoader.load(
+        asset.path,
+        (texture) => {
+          if (activeSkyboxTexture) activeSkyboxTexture.dispose();
+          const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+          texture.dispose();
+          activeSkyboxTexture = envMap;
+          scene.environment = envMap;
+          scene.background = settings.showAsBackground ? envMap : new THREE.Color(0x09121d);
+        },
+        undefined,
+        (error) => onError(`Skybox load failed: ${String(error)}`)
+      );
     }
 
     function setPointer(event: PointerEvent) {
@@ -375,6 +428,8 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
       renderer.domElement.removeEventListener("contextmenu", handleContextMenu);
       transformControls.removeEventListener("dragging-changed", handleTransformDrag);
       transformControls.dispose();
+      activeSkyboxTexture?.dispose();
+      pmremGenerator.dispose();
       renderer.dispose();
       mountElement.removeChild(renderer.domElement);
       scene.traverse((node) => {
@@ -622,4 +677,8 @@ function createSceneObjectMarker(object: import("../../types/scene").SceneObject
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.9), material);
   mesh.castShadow = true;
   return mesh;
+}
+
+function isSkyboxObject(object: import("../../types/scene").SceneObject) {
+  return object.components.some((component) => component.componentType === "Skybox");
 }

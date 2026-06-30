@@ -21,6 +21,45 @@ pub enum QualityPreset {
     Cinematic,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
+pub enum FeatureStatus {
+    Implemented,
+    Partial,
+    Planned,
+    Unsupported,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RendererFeatureMatrix {
+    pub deferred_gbuffer: FeatureStatus,
+    pub clustered_forward_plus: FeatureStatus,
+    pub ssao: FeatureStatus,
+    pub ssr: FeatureStatus,
+    pub progressive_path_tracing: FeatureStatus,
+    pub compute_bvh_fallback: FeatureStatus,
+    pub hardware_ray_tracing_abstraction: FeatureStatus,
+    pub mobile_vulkan_metal_demo: FeatureStatus,
+    pub browser_webgpu_demo: FeatureStatus,
+}
+
+impl RendererFeatureMatrix {
+    pub fn from_capabilities(capabilities: &BackendCapabilities) -> Self {
+        Self {
+            deferred_gbuffer: FeatureStatus::Partial,
+            clustered_forward_plus: if capabilities.supports_compute { FeatureStatus::Partial } else { FeatureStatus::Unsupported },
+            ssao: FeatureStatus::Planned,
+            ssr: FeatureStatus::Planned,
+            progressive_path_tracing: if capabilities.supports_compute { FeatureStatus::Partial } else { FeatureStatus::Unsupported },
+            compute_bvh_fallback: if capabilities.supports_compute { FeatureStatus::Planned } else { FeatureStatus::Unsupported },
+            hardware_ray_tracing_abstraction: if capabilities.supports_ray_tracing { FeatureStatus::Partial } else { FeatureStatus::Unsupported },
+            mobile_vulkan_metal_demo: FeatureStatus::Planned,
+            browser_webgpu_demo: FeatureStatus::Planned,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GraphicsSettings {
@@ -122,5 +161,9 @@ impl ForgeRenderer {
 
     pub fn stats(&self) -> GpuStats {
         self.stats.clone()
+    }
+
+    pub fn feature_matrix(&self) -> RendererFeatureMatrix {
+        RendererFeatureMatrix::from_capabilities(&self.capabilities)
     }
 }

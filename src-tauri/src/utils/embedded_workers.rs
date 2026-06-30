@@ -91,14 +91,35 @@ pub fn worker_bin_dir() -> Result<PathBuf> {
 }
 
 fn find_development_worker(worker: &str) -> Option<PathBuf> {
-    let cwd = std::env::current_dir().ok()?;
-    [
-        cwd.join("target").join("release").join(worker),
-        cwd.join("bin").join(worker),
-        cwd.join(worker),
-    ]
-    .into_iter()
-    .find(|path| path.exists())
+    let cwd = std::env::current_dir().ok();
+    let exe_dir = std::env::current_exe()
+        .ok()
+        .and_then(|path| path.parent().map(Path::to_path_buf));
+    let mut roots = Vec::new();
+    if let Some(dir) = exe_dir {
+        roots.push(dir.clone());
+        roots.push(dir.join(".."));
+        roots.push(dir.join("..").join(".."));
+    }
+    if let Some(dir) = cwd {
+        roots.push(dir.clone());
+        roots.push(dir.join(".."));
+        roots.push(dir.join("..").join(".."));
+    }
+
+    roots
+        .into_iter()
+        .flat_map(|root| {
+            [
+                root.join("target").join("release").join(worker),
+                root.join("target").join("debug").join(worker),
+                root.join("src-tauri").join("target").join("release").join(worker),
+                root.join("artifacts").join("windows").join(worker),
+                root.join("bin").join(worker),
+                root.join(worker),
+            ]
+        })
+        .find(|path| path.exists())
 }
 
 fn write_if_changed(destination: &Path, bytes: &[u8]) -> Result<()> {

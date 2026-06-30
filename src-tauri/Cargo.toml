@@ -8,7 +8,7 @@ rust-version = "1.77"
 
 [lib]
 name = "forge_installer_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
+crate-type = ["rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -27,6 +27,7 @@ thiserror = "1"
 uuid = { version = "1", features = ["v4", "serde"] }
 walkdir = "2"
 winreg = "0.55"
+zip = { version = "2", default-features = false, features = ["deflate"] }
 forge_process = { path = "../crates/forge_process" }
 forge_settings = { path = "../crates/forge_settings" }
 forge_rhi = { path = "../crates/forge_rhi", features = ["dx12", "vulkan", "metal"] }

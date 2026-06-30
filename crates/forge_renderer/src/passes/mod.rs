@@ -1,5 +1,9 @@
 pub mod bloom_pass;
+pub mod clustered_forward_pass;
 pub mod clear_pass;
+pub mod deferred_gbuffer_pass;
 pub mod forward_pass;
+pub mod ssao_pass;
+pub mod ssr_pass;
 pub mod shadow_pass;
 pub mod tonemap_pass;

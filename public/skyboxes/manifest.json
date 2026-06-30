@@ -1,0 +1,8 @@
+﻿{
+  "skyboxes": [
+    { "id": "citrus_orchard_puresky", "label": "Citrus Orchard Pure Sky", "resolution": "2k", "path": "/skyboxes/citrus_orchard_puresky_2k.hdr", "minDeviceMemoryGb": 0, "maxTextureSize": 2048 },
+    { "id": "citrus_orchard_puresky", "label": "Citrus Orchard Pure Sky", "resolution": "4k", "path": "/skyboxes/citrus_orchard_puresky_4k.hdr", "minDeviceMemoryGb": 4, "maxTextureSize": 4096 },
+    { "id": "citrus_orchard_puresky", "label": "Citrus Orchard Pure Sky", "resolution": "8k", "path": "/skyboxes/citrus_orchard_puresky_8k.hdr", "minDeviceMemoryGb": 8, "maxTextureSize": 8192 },
+    { "id": "citrus_orchard_puresky", "label": "Citrus Orchard Pure Sky", "resolution": "16k", "path": "/skyboxes/citrus_orchard_puresky_16k.hdr", "minDeviceMemoryGb": 16, "maxTextureSize": 16384 }
+  ]
+}

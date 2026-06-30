@@ -3,6 +3,7 @@ import { RotateCcw, Save, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { engineBridge } from "../lib/engineBridge";
 import type { BackendCapabilities, DebugView, GpuStats, GraphicsSettings, QualityPreset, RendererPath } from "../types/renderer";
+import { CustomSelect } from "./shared/CustomSelect";
 import { PillButton } from "./shared/PillButton";
 import { RendererStatsPanel } from "./RendererStatsPanel";
 
@@ -84,9 +85,9 @@ export function GraphicsSettingsModal({ open, onClose, onSaved, onError }: Graph
                 <section className="graphics-section">
                   <h3>Renderer</h3>
                   <div className="graphics-grid">
-                    <Select label="Renderer path" value={settings.rendererPath} options={rendererPaths} onChange={(rendererPath) => setSettings({ ...settings, rendererPath })} />
-                    <Select label="Quality preset" value={settings.qualityPreset} options={qualityPresets} onChange={(qualityPreset) => setSettings({ ...settings, qualityPreset })} />
-                    <Select label="Debug view" value={settings.debugView} options={debugViews} onChange={(debugView) => setSettings({ ...settings, debugView })} />
+                    <CustomSelect label="Renderer path" value={settings.rendererPath} options={rendererPaths} onChange={(rendererPath) => setSettings({ ...settings, rendererPath })} />
+                    <CustomSelect label="Quality preset" value={settings.qualityPreset} options={qualityPresets} onChange={(qualityPreset) => setSettings({ ...settings, qualityPreset })} />
+                    <CustomSelect label="Debug view" value={settings.debugView} options={debugViews} onChange={(debugView) => setSettings({ ...settings, debugView })} />
                   </div>
                 </section>
                 <section className="graphics-section">
@@ -111,10 +112,10 @@ export function GraphicsSettingsModal({ open, onClose, onSaved, onError }: Graph
                 <section className="graphics-section">
                   <h3>Lighting and Performance</h3>
                   <div className="graphics-grid">
-                    <Select label="GI mode" value={settings.giMode} options={["None", "Probes", "ScreenSpace", "DDGI Planned", "Hardware RT Planned"]} onChange={(giMode) => setSettings({ ...settings, giMode })} />
-                    <Select label="Shadow quality" value={settings.shadowQuality} options={["Low", "Medium", "High", "Ultra"]} onChange={(shadowQuality) => setSettings({ ...settings, shadowQuality })} />
-                    <Select label="Reflection quality" value={settings.reflectionQuality} options={["Off", "Probes", "ScreenSpace", "RayTraced"]} onChange={(reflectionQuality) => setSettings({ ...settings, reflectionQuality })} />
-                    <Select label="Volumetric quality" value={settings.volumetricQuality} options={["Off", "Low", "Medium", "High"]} onChange={(volumetricQuality) => setSettings({ ...settings, volumetricQuality })} />
+                    <CustomSelect label="GI mode" value={settings.giMode} options={["None", "Probes", "ScreenSpace", "DDGI Planned", "Hardware RT Planned"]} onChange={(giMode) => setSettings({ ...settings, giMode })} />
+                    <CustomSelect label="Shadow quality" value={settings.shadowQuality} options={["Low", "Medium", "High", "Ultra"]} onChange={(shadowQuality) => setSettings({ ...settings, shadowQuality })} />
+                    <CustomSelect label="Reflection quality" value={settings.reflectionQuality} options={["Off", "Probes", "ScreenSpace", "RayTraced"]} onChange={(reflectionQuality) => setSettings({ ...settings, reflectionQuality })} />
+                    <CustomSelect label="Volumetric quality" value={settings.volumetricQuality} options={["Off", "Low", "Medium", "High"]} onChange={(volumetricQuality) => setSettings({ ...settings, volumetricQuality })} />
                     <NumberField label="Resolution scale" min={0.25} max={1.5} step={0.05} value={settings.resolutionScale} onChange={(resolutionScale) => setSettings({ ...settings, resolutionScale })} />
                     <NumberField label="Texture budget MB" min={256} max={32768} step={256} value={settings.textureBudgetMb} onChange={(textureBudgetMb) => setSettings({ ...settings, textureBudgetMb })} />
                     <NumberField label="Max lights" min={1} max={4096} value={settings.maxLights} onChange={(maxLights) => setSettings({ ...settings, maxLights })} />
@@ -134,17 +135,6 @@ export function GraphicsSettingsModal({ open, onClose, onSaved, onError }: Graph
         </motion.div>
       ) : null}
     </AnimatePresence>
-  );
-}
-
-function Select<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: readonly T[]; onChange: (value: T) => void }) {
-  return (
-    <label className="field-stack">
-      <span>{label}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value as T)}>
-        {options.map((option) => <option key={option} value={option}>{option}</option>)}
-      </select>
-    </label>
   );
 }
 

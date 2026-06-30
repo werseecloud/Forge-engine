@@ -1,11 +1,18 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle2, Loader2, Terminal, XCircle } from "lucide-react";
+import { listen } from "@tauri-apps/api/event";
+import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import forgeSplashBg from "../../assets/splash/forge-splash-bg.png";
+import werseeLogo from "../../assets/splash/wersee-logo.png";
 import { commands, type EngineBootStep } from "../../lib/tauri";
-import { PillButton } from "../shared/PillButton";
 
 interface EngineStartupSplashProps {
   onComplete: (steps: EngineBootStep[]) => void;
+}
+
+interface EngineBootStatus {
+  label: string;
+  detail: string;
 }
 
 export function EngineStartupSplash({ onComplete }: EngineStartupSplashProps) {
@@ -13,6 +20,10 @@ export function EngineStartupSplash({ onComplete }: EngineStartupSplashProps) {
   const [running, setRunning] = useState(true);
   const [steps, setSteps] = useState<EngineBootStep[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<EngineBootStatus>({
+    label: "Starting engine",
+    detail: "Preparing Forge Engine services"
+  });
   const onCompleteRef = useRef(onComplete);
 
   useEffect(() => {
@@ -21,15 +32,38 @@ export function EngineStartupSplash({ onComplete }: EngineStartupSplashProps) {
 
   useEffect(() => {
     let cancelled = false;
+    let cleanupStatus: (() => void) | undefined;
+    let cleanupStep: (() => void) | undefined;
     async function boot() {
       try {
+        cleanupStatus = await listen<EngineBootStatus>("engine_boot_status", (event) => {
+          if (!cancelled) setStatus(event.payload);
+        });
+        cleanupStep = await listen<EngineBootStep>("engine_boot_step_completed", (event) => {
+          if (!cancelled) setSteps((current) => [...current, event.payload]);
+        });
         const result = await commands.startEngineServices();
         if (cancelled) return;
         setSteps(result);
+        const failed = result.some((step) => step.status !== "ok");
+        setStatus({
+          label: failed ? "Startup completed with warnings" : "Engine ready",
+          detail: failed ? "Opening editor; check Output Log for service warnings" : "Opening Forge Engine editor"
+        });
         onCompleteRef.current(result);
+        window.setTimeout(() => {
+          if (!cancelled) setVisible(false);
+        }, failed ? 1200 : 700);
       } catch (bootError) {
         if (cancelled) return;
         setError(String(bootError));
+        setStatus({
+          label: "Startup issue detected",
+          detail: "Opening editor; check Output Log for details"
+        });
+        window.setTimeout(() => {
+          if (!cancelled) setVisible(false);
+        }, 1800);
       } finally {
         if (!cancelled) setRunning(false);
       }
@@ -37,41 +71,49 @@ export function EngineStartupSplash({ onComplete }: EngineStartupSplashProps) {
     void boot();
     return () => {
       cancelled = true;
+      cleanupStatus?.();
+      cleanupStep?.();
     };
   }, []);
 
   const failed = steps.some((step) => step.status !== "ok") || !!error;
+  const okCount = steps.filter((step) => step.status === "ok").length;
+  const totalCount = Math.max(steps.length, 5);
+  const statusIcon = running ? <Loader2 className="spin" size={18} /> : failed ? <XCircle size={18} /> : <CheckCircle2 size={18} />;
 
   return (
     <AnimatePresence>
       {visible ? (
         <motion.div className="startup-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <motion.div className="startup-modal" initial={{ opacity: 0, y: 14, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.98 }}>
-            <div className="startup-modal__header">
+          <motion.div
+            className="startup-splash"
+            style={{ backgroundImage: `url(${forgeSplashBg})` }}
+            initial={{ opacity: 0, y: 18, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.985 }}
+          >
+            <div className="startup-splash__shade" />
+            <div className="startup-splash__top">
               <div className="forge-mark">F</div>
-              <div>
-                <span>Forge Engine 1.0.0</span>
-                <h2>Starting 3D engine services</h2>
+              <span className={failed ? "startup-splash__state startup-splash__state--error" : "startup-splash__state"}>
+                {statusIcon}
+              </span>
+            </div>
+            <div className="startup-splash__bottom">
+              <div className="startup-pill startup-pill--brand">
+                <strong>Forge Engine</strong>
+                <span>3D Editor 1.0.0</span>
               </div>
-              {running ? <Loader2 className="spin" size={20} /> : failed ? <XCircle className="tone-error" size={20} /> : <CheckCircle2 className="tone-ok" size={20} />}
+              <div className="startup-pill startup-pill--status">
+                <span>{status.label}</span>
+                <strong>{status.detail}</strong>
+                <em>{okCount}/{totalCount} services ready</em>
+              </div>
+              <div className="startup-pill startup-pill--logo" aria-label="Wersee Developers">
+                <img src={werseeLogo} alt="Wersee Developers" />
+              </div>
             </div>
-            <div className="startup-terminal">
-              <div><Terminal size={14} /> boot terminal</div>
-              <pre>
-{`> resolving local Forge Engine binaries
-> running backend health checks
-${steps.map((step) => `$ ${step.command}
-[${step.status}] ${step.component}
-${step.stdout || step.stderr}`).join("\n")}
-${running ? "> waiting for engine services..." : failed ? "> startup completed with warnings/errors" : "> engine services ready"}`}
-              </pre>
-            </div>
-            {error ? <div className="error-banner">{error}</div> : null}
-            <div className="startup-modal__footer">
-              <PillButton active={!running && !failed} disabled={running} onClick={() => setVisible(false)}>
-                {running ? "Starting..." : failed ? "Continue with warnings" : "Open Forge Engine"}
-              </PillButton>
-            </div>
+            {error ? <div className="startup-splash__error">{error}</div> : null}
           </motion.div>
         </motion.div>
       ) : null}

@@ -17,3 +17,4 @@ pub mod installer_log_commands;
 pub mod engine_commands;
 pub mod worker_commands;
 pub mod renderer_commands;
+pub mod skybox_commands;

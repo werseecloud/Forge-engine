@@ -3,6 +3,7 @@ import { Check, ChevronLeft, ChevronRight, FolderTree, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { commands } from "../../lib/tauri";
 import type { CreateProjectRequest, OpenProjectResponse } from "../../types/project";
+import { CustomSelect } from "../shared/CustomSelect";
 import { PathPicker } from "../shared/PathPicker";
 import { PillButton } from "../shared/PillButton";
 
@@ -123,18 +124,8 @@ export function CreateProjectModal({ open, defaultLocation, onClose, onCreated, 
                     <span>Engine version</span>
                     <input value="1.0.0" readOnly />
                   </label>
-                  <label>
-                    <span>Render backend</span>
-                    <select value={form.renderBackend} onChange={(event) => setForm({ ...form, renderBackend: event.target.value })}>
-                      <option value="wgpu">wgpu</option>
-                    </select>
-                  </label>
-                  <label>
-                    <span>Target platform</span>
-                    <select value={form.targetPlatform} onChange={(event) => setForm({ ...form, targetPlatform: event.target.value })}>
-                      <option>Windows</option>
-                    </select>
-                  </label>
+                  <CustomSelect label="Render backend" value={form.renderBackend} options={["wgpu"]} onChange={(renderBackend) => setForm({ ...form, renderBackend })} />
+                  <CustomSelect label="Target platform" value={form.targetPlatform} options={["Windows"]} onChange={(targetPlatform) => setForm({ ...form, targetPlatform })} />
                   <label className="checkbox-row">
                     <input type="checkbox" checked={form.sourceControlIgnore} onChange={(event) => setForm({ ...form, sourceControlIgnore: event.target.checked })} />
                     <span>Create source control ignore file</span>
@@ -162,6 +153,7 @@ export function CreateProjectModal({ open, defaultLocation, onClose, onCreated, 
     Materials/
     Meshes/
     Textures/
+    Skyboxes/
     Audio/
     Animations/
     UI/
