@@ -12,6 +12,29 @@ html, body, #root {
 button, input { font: inherit; }
 button { border: 0; color: inherit; cursor: pointer; }
 button:disabled { opacity: .45; cursor: not-allowed; }
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(41,151,255,.55) rgba(255,255,255,.045);
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: rgba(255,255,255,.035);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(41,151,255,.78), rgba(30,123,255,.42));
+  border: 2px solid #0B0F14;
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #2997FF, rgba(30,123,255,.72));
+}
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
 input {
   background: #070B10;
   border: 1px solid rgba(255,255,255,.08);
@@ -129,7 +152,15 @@ footer button:first-child { margin-right: auto; }
   white-space: pre-wrap;
 }
 .warning { padding: 10px; border-radius: 9px; background: rgba(255,214,10,.09); border: 1px solid rgba(255,214,10,.22); color: #FFD60A; }
-.error-banner { padding: 10px; border-radius: 9px; background: rgba(255,69,58,.09); border: 1px solid rgba(255,69,58,.26); color: #FF9B95; }
+.error-banner {
+  max-height: 132px;
+  overflow: auto;
+  padding: 10px;
+  border-radius: 9px;
+  background: rgba(255,69,58,.09);
+  border: 1px solid rgba(255,69,58,.26);
+  color: #FF9B95;
+}
 .success-line { color: #9EEBAE; }
 .progress-row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; }
 .progress { height: 10px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
@@ -732,4 +763,44 @@ footer button:first-child { margin-right: auto; }
 .toast--warning {
   border-color: rgba(255,214,10,.35);
   color: #FFD60A;
+}
+.toast-center {
+  position: fixed;
+  left: 14px;
+  right: auto;
+  bottom: 42px;
+  z-index: 120;
+  width: min(430px, calc(100vw - 28px));
+  max-height: min(280px, calc(100vh - 110px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  pointer-events: none;
+  padding-right: 4px;
+}
+.toast {
+  max-height: 92px;
+  overflow: auto;
+  pointer-events: auto;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(11,15,20,.96);
+  border: 1px solid rgba(255,255,255,.1);
+  box-shadow: 0 16px 42px rgba(0,0,0,.44);
+  color: rgba(255,255,255,.88);
+  line-height: 1.35;
+}
+.toast--success {
+  border-color: rgba(48,209,88,.34);
+  color: #9EEBAE;
+}
+.toast--error {
+  border-color: rgba(255,69,58,.34);
+  color: #FF9B95;
+}
+.toast--info {
+  border-color: rgba(41,151,255,.34);
+  color: #B7E3FF;
 }
