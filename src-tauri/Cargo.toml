@@ -2,7 +2,7 @@
 name = "forge_installer"
 version = "1.0.0"
 description = "Forge Engine desktop editor"
-authors = ["WerseeCloud"]
+authors = ["Wersee Developers"]
 edition = "2021"
 rust-version = "1.77"
 

@@ -28,9 +28,24 @@
   },
   "bundle": {
     "active": false,
-    "publisher": "WerseeCloud",
+    "publisher": "Wersee Developers",
+    "copyright": "Copyright (c) 2026 Wersee Developers. All rights reserved.",
     "category": "DeveloperTool",
     "shortDescription": "Forge Engine",
-    "longDescription": "The native Forge Engine editor for Windows."
+    "longDescription": "The native Forge Engine editor for Windows.",
+    "windows": {
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "http://timestamp.digicert.com",
+      "signCommand": {
+        "cmd": "powershell",
+        "args": [
+          "-NoProfile",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-Command",
+          "$p='%1'; $s=Join-Path (Get-Location) 'scripts\\sign-windows.ps1'; if (!(Test-Path -LiteralPath $s)) { $s=Join-Path (Get-Location) '..\\scripts\\sign-windows.ps1' }; & $s -FilePath $p"
+        ]
+      }
+    }
   }
 }
