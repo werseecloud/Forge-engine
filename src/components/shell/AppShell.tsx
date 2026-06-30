@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
-import { commands } from "../../lib/tauri";
+import { useCallback, useEffect, useState } from "react";
+import { commands, type EngineBootStep } from "../../lib/tauri";
 import { useAppStore } from "../../stores/useAppStore";
 import { useAssetStore } from "../../stores/useAssetStore";
 import { useLogStore } from "../../stores/useLogStore";
@@ -142,6 +142,11 @@ export function AppShell() {
     window.setTimeout(() => setToasts((items) => items.filter((item) => item.id !== id)), 3600);
   }
 
+  const handleStartupComplete = useCallback((steps: EngineBootStep[]) => {
+    const failed = steps.filter((step) => step.status !== "ok");
+    failed.length > 0 ? toast("warning", `${failed.length} engine service check(s) need attention.`) : toast("success", "Engine services ready.");
+  }, []);
+
   async function onLevelCreated(level: SceneLevel) {
     setActiveLevel(level);
     await refreshProjectData();
@@ -199,12 +204,7 @@ export function AppShell() {
       <AnimatePresence>
         <ToastCenter toasts={toasts} />
       </AnimatePresence>
-      <EngineStartupSplash
-        onComplete={(steps) => {
-          const failed = steps.filter((step) => step.status !== "ok");
-          failed.length > 0 ? toast("warning", `${failed.length} engine service check(s) need attention.`) : toast("success", "Engine services ready.");
-        }}
-      />
+      <EngineStartupSplash onComplete={handleStartupComplete} />
     </motion.div>
   );
 }

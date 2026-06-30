@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, Loader2, Terminal, XCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { commands, type EngineBootStep } from "../../lib/tauri";
 import { PillButton } from "../shared/PillButton";
 
@@ -13,6 +13,11 @@ export function EngineStartupSplash({ onComplete }: EngineStartupSplashProps) {
   const [running, setRunning] = useState(true);
   const [steps, setSteps] = useState<EngineBootStep[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const onCompleteRef = useRef(onComplete);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     let cancelled = false;
@@ -21,7 +26,7 @@ export function EngineStartupSplash({ onComplete }: EngineStartupSplashProps) {
         const result = await commands.startEngineServices();
         if (cancelled) return;
         setSteps(result);
-        onComplete(result);
+        onCompleteRef.current(result);
       } catch (bootError) {
         if (cancelled) return;
         setError(String(bootError));
@@ -33,7 +38,7 @@ export function EngineStartupSplash({ onComplete }: EngineStartupSplashProps) {
     return () => {
       cancelled = true;
     };
-  }, [onComplete]);
+  }, []);
 
   const failed = steps.some((step) => step.status !== "ok") || !!error;
 

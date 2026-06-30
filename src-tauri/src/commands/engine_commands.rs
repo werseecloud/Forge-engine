@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use crate::services::log_service;
+use crate::utils::embedded_workers;
 use crate::utils::errors::{command_error, CommandResult};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -21,6 +21,12 @@ pub fn start_engine_services() -> CommandResult<Vec<EngineBootStep>> {
 }
 
 fn start_services() -> anyhow::Result<Vec<EngineBootStep>> {
+    let installed_bin = embedded_workers::ensure_worker_binaries_installed()?;
+    log_service::append_output_log(&format!(
+        "Worker binaries installed/resolved in {}",
+        installed_bin.display()
+    ))
+    .ok();
     let components = [
         "forge_renderer_worker.exe",
         "forge_runtime.exe",
@@ -30,7 +36,7 @@ fn start_services() -> anyhow::Result<Vec<EngineBootStep>> {
     ];
     let mut steps = Vec::new();
     for component in components {
-        let Some(path) = find_component(component) else {
+        let Some(path) = embedded_workers::find_worker_binary(component) else {
             let step = EngineBootStep {
                 component: component.to_string(),
                 command: component.to_string(),
@@ -43,7 +49,11 @@ fn start_services() -> anyhow::Result<Vec<EngineBootStep>> {
             continue;
         };
         let output = Command::new(&path).arg("--health-check").output()?;
-        let status = if output.status.success() { "ok" } else { "failed" };
+        let status = if output.status.success() {
+            "ok"
+        } else {
+            "failed"
+        };
         let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
         let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
         log_service::append_output_log(&format!("Engine boot {}: {}", component, status)).ok();
@@ -56,22 +66,4 @@ fn start_services() -> anyhow::Result<Vec<EngineBootStep>> {
         });
     }
     Ok(steps)
-}
-
-fn find_component(component: &str) -> Option<PathBuf> {
-    let exe = std::env::current_exe().ok();
-    let cwd = std::env::current_dir().ok();
-    let mut candidates = Vec::new();
-    if let Some(exe) = exe.as_ref() {
-        if let Some(parent) = exe.parent() {
-            candidates.push(parent.join("bin").join(component));
-            candidates.push(parent.join(component));
-        }
-    }
-    if let Some(cwd) = cwd.as_ref() {
-        candidates.push(cwd.join("target").join("release").join(component));
-        candidates.push(cwd.join("bin").join(component));
-        candidates.push(cwd.join(component));
-    }
-    candidates.into_iter().find(|path| Path::new(path).exists())
 }

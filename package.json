@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 1420",
-    "build": "tsc && vite build",
-    "build:editor": "tsc && vite build --mode editor",
+    "build:workers": "cargo build --release -p forge_editor_core -p forge_asset_worker -p forge_shader_worker -p forge_build_worker -p forge_runtime -p forge_renderer_worker",
+    "build": "npm run build:workers && tsc && vite build",
+    "build:editor": "npm run build:workers && tsc && vite build --mode editor",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
