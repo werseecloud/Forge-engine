@@ -1,0 +1,18 @@
+[package]
+name = "forge_editor_bridge"
+version = "1.0.0"
+edition = "2021"
+
+[features]
+default = []
+editor = []
+webgpu = []
+raytracing = []
+pathtracing = []
+
+[dependencies]
+forge_renderer = { path = "../forge_renderer", default-features = false }
+forge_raytracing = { path = "../forge_raytracing" }
+forge_rhi = { path = "../forge_rhi", default-features = false }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

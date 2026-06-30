@@ -1,0 +1,27 @@
+[package]
+name = "forge_renderer"
+version = "1.0.0"
+edition = "2021"
+
+[features]
+default = ["webgpu"]
+webgpu = ["forge_rhi/webgpu"]
+vulkan = ["forge_rhi/vulkan"]
+dx12 = ["forge_rhi/dx12"]
+metal = ["forge_rhi/metal"]
+opengl_fallback = ["forge_rhi/opengl_fallback"]
+raytracing = ["forge_raytracing/raytracing"]
+pathtracing = ["forge_raytracing/pathtracing"]
+editor = ["forge_rhi/editor", "forge_scene/editor", "forge_shader/editor"]
+mobile = ["forge_rhi/mobile"]
+
+[dependencies]
+forge_core = { path = "../forge_core" }
+forge_rhi = { path = "../forge_rhi" }
+forge_scene = { path = "../forge_scene" }
+forge_shader = { path = "../forge_shader" }
+forge_raytracing = { path = "../forge_raytracing" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+tracing = "0.1"

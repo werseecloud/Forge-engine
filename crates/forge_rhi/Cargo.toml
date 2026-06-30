@@ -1,0 +1,23 @@
+[package]
+name = "forge_rhi"
+version = "1.0.0"
+edition = "2021"
+
+[features]
+default = ["webgpu"]
+webgpu = ["dep:wgpu", "dep:pollster"]
+vulkan = ["webgpu"]
+dx12 = ["webgpu"]
+metal = ["webgpu"]
+opengl_fallback = ["webgpu"]
+raytracing = []
+pathtracing = []
+editor = []
+mobile = []
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+thiserror = "1"
+tracing = "0.1"
+wgpu = { version = "0.20", optional = true }
+pollster = { version = "0.3", optional = true }

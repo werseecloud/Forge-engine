@@ -45,8 +45,7 @@ pub fn run() {
             commands::settings_commands::set_default_projects_dir,
             commands::log_commands::read_output_log,
             commands::log_commands::append_output_log,
-            commands::log_commands::clear_output_log
-            ,
+            commands::log_commands::clear_output_log,
             commands::system_commands::run_system_check,
             commands::system_commands::check_existing_install,
             commands::system_commands::get_windows_user_paths,
@@ -87,7 +86,12 @@ pub fn run() {
             commands::worker_commands::stop_worker,
             commands::worker_commands::restart_worker,
             commands::worker_commands::run_worker_health_check,
-            commands::worker_commands::get_worker_status
+            commands::worker_commands::get_worker_status,
+            commands::renderer_commands::get_backend_capabilities,
+            commands::renderer_commands::get_renderer_settings,
+            commands::renderer_commands::update_renderer_settings,
+            commands::renderer_commands::get_gpu_stats,
+            commands::renderer_commands::reset_path_tracing_accumulation
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Forge Engine editor");

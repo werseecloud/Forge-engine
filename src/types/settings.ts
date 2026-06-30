@@ -1,4 +1,5 @@
 import type { ProjectSummary } from "./project";
+import type { GraphicsSettings } from "./renderer";
 
 export interface AppSettings {
   defaultProjectsDir: string;
@@ -12,5 +13,5 @@ export interface AppSettings {
   editorLayout: Record<string, unknown>;
   autosaveEnabled: boolean;
   autosaveInterval: number;
+  graphicsSettings: GraphicsSettings;
 }
-

@@ -22,6 +22,7 @@ pub fn default_settings() -> Result<AppSettings> {
         }),
         autosave_enabled: true,
         autosave_interval: 120,
+        graphics_settings: forge_renderer::GraphicsSettings::default(),
     })
 }
 
@@ -46,4 +47,3 @@ pub fn save_settings(settings: &AppSettings) -> Result<AppSettings> {
     write_json_pretty(Path::new(&dirs.settings_path), settings)?;
     Ok(settings.clone())
 }
-

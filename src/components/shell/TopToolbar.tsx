@@ -1,4 +1,4 @@
-import { ChevronDown, FolderOpen, GitBranch, Maximize2, MousePointer2, Move3D, Pause, Play, Plus, RotateCcw, Save, Settings, SkipForward, Square, UserCircle } from "lucide-react";
+import { ChevronDown, FolderOpen, GitBranch, Maximize2, MonitorCog, MousePointer2, Move3D, Pause, Play, Plus, RotateCcw, Save, Settings, SkipForward, Square, UserCircle } from "lucide-react";
 import { useAppStore } from "../../stores/useAppStore";
 import { useEditorModeStore } from "../../stores/useEditorModeStore";
 import { useProjectStore } from "../../stores/useProjectStore";
@@ -11,12 +11,13 @@ import { PillButton } from "../shared/PillButton";
 interface TopToolbarProps {
   onCreateProject: () => void;
   onOpenProject: () => void;
+  onGraphicsSettings: () => void;
   onSettings: () => void;
   onSave: () => void;
   onNotify: (tone: "success" | "warning" | "error", message: string) => void;
 }
 
-export function TopToolbar({ onCreateProject, onOpenProject, onSettings, onSave, onNotify }: TopToolbarProps) {
+export function TopToolbar({ onCreateProject, onOpenProject, onGraphicsSettings, onSettings, onSave, onNotify }: TopToolbarProps) {
   const currentProject = useProjectStore((state) => state.currentProject);
   const editorMode = useEditorModeStore((state) => state.mode);
   const enterPlayMode = useEditorModeStore((state) => state.enterPlayMode);
@@ -120,6 +121,7 @@ export function TopToolbar({ onCreateProject, onOpenProject, onSettings, onSave,
       <div className="toolbar-spacer" />
 
       <div className="toolbar-group">
+        <PillButton onClick={onGraphicsSettings} icon={<MonitorCog size={15} />}>Graphics</PillButton>
         <PillButton onClick={onSettings} icon={<Settings size={15} />}>Settings</PillButton>
         <IconButton label="Local profile"><UserCircle size={19} /></IconButton>
       </div>

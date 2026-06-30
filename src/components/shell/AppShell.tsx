@@ -19,6 +19,7 @@ import { CenterViewport } from "../viewport/CenterViewport";
 import { CreateLevelModal } from "../modals/CreateLevelModal";
 import { CreateProjectModal } from "../modals/CreateProjectModal";
 import { SettingsModal } from "../modals/SettingsModal";
+import { GraphicsSettingsModal } from "../GraphicsSettingsModal";
 import { StatusBar } from "./StatusBar";
 import { TopToolbar } from "./TopToolbar";
 import { WindowsTitleBar } from "./WindowsTitleBar";
@@ -28,6 +29,7 @@ export function AppShell() {
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
   const [createLevelOpen, setCreateLevelOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [graphicsSettingsOpen, setGraphicsSettingsOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [watcher, setWatcher] = useState<WatcherStatus | null>(null);
   const [fps, setFps] = useState(0);
@@ -158,7 +160,14 @@ export function AppShell() {
   return (
     <motion.div className="app-shell" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <WindowsTitleBar />
-      <TopToolbar onCreateProject={() => setCreateProjectOpen(true)} onOpenProject={openProject} onSettings={() => setSettingsOpen(true)} onSave={saveActiveLevel} onNotify={toast} />
+      <TopToolbar
+        onCreateProject={() => setCreateProjectOpen(true)}
+        onOpenProject={openProject}
+        onGraphicsSettings={() => setGraphicsSettingsOpen(true)}
+        onSettings={() => setSettingsOpen(true)}
+        onSave={saveActiveLevel}
+        onNotify={toast}
+      />
       <main className="editor-grid">
         <LeftDock onCreateLevel={() => setCreateLevelOpen(true)} />
         <div className="center-stack">
@@ -199,6 +208,12 @@ export function AppShell() {
           setSettings(saved);
           toast("success", "Settings saved.");
         }}
+        onError={(message) => toast("error", message)}
+      />
+      <GraphicsSettingsModal
+        open={graphicsSettingsOpen}
+        onClose={() => setGraphicsSettingsOpen(false)}
+        onSaved={() => toast("success", "Graphics settings applied.")}
         onError={(message) => toast("error", message)}
       />
       <AnimatePresence>

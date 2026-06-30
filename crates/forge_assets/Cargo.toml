@@ -1,0 +1,15 @@
+[package]
+name = "forge_assets"
+version = "1.0.0"
+edition = "2021"
+
+[features]
+default = ["gltf_import"]
+gltf_import = ["dep:gltf"]
+editor = []
+
+[dependencies]
+forge_scene = { path = "../forge_scene" }
+serde = { version = "1", features = ["derive"] }
+thiserror = "1"
+gltf = { version = "1", optional = true }

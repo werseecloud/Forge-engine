@@ -217,6 +217,12 @@ checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
 name = "base64"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
+
+[[package]]
+name = "base64"
 version = "0.21.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
@@ -362,6 +368,12 @@ name = "byteorder"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
+
+[[package]]
+name = "byteorder-lite"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f1fe948ff07f4bd06c30984e69f5b4899c516a3ef74f34df92a2df2ab535495"
 
 [[package]]
 name = "bytes"
@@ -815,7 +827,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b28bfe653d79bd16c77f659305b195b82bb5ce0c0eb2a4846b82ddbd77586813"
 dependencies = [
  "bitflags 2.13.0",
- "libloading 0.7.4",
+ "libloading 0.8.9",
  "winapi",
 ]
 
@@ -981,7 +993,7 @@ version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ab8ecd87370524b461f8557c119c405552c396ed91fc0a8eec68679eab26f94a"
 dependencies = [
- "libloading 0.7.4",
+ "libloading 0.8.9",
 ]
 
 [[package]]
@@ -1245,6 +1257,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "forge_assets"
+version = "1.0.0"
+dependencies = [
+ "forge_scene",
+ "gltf",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "forge_build_worker"
 version = "1.0.0"
 dependencies = [
@@ -1254,6 +1276,28 @@ dependencies = [
  "forge_logs",
  "forge_project",
  "forge_settings",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "forge_core"
+version = "1.0.0"
+dependencies = [
+ "glam",
+ "serde",
+ "thiserror 1.0.69",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "forge_editor_bridge"
+version = "1.0.0"
+dependencies = [
+ "forge_raytracing",
+ "forge_renderer",
+ "forge_rhi",
  "serde",
  "serde_json",
 ]
@@ -1284,7 +1328,10 @@ dependencies = [
  "anyhow",
  "chrono",
  "dirs 5.0.1",
+ "forge_editor_bridge",
  "forge_process",
+ "forge_renderer",
+ "forge_rhi",
  "forge_settings",
  "fs2",
  "serde",
@@ -1320,6 +1367,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "forge_mobile"
+version = "1.0.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "forge_process"
 version = "1.0.0"
 dependencies = [
@@ -1338,6 +1392,29 @@ dependencies = [
  "sha2",
  "uuid",
  "walkdir",
+]
+
+[[package]]
+name = "forge_raytracing"
+version = "1.0.0"
+dependencies = [
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "forge_renderer"
+version = "1.0.0"
+dependencies = [
+ "forge_core",
+ "forge_raytracing",
+ "forge_rhi",
+ "forge_scene",
+ "forge_shader",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tracing",
 ]
 
 [[package]]
@@ -1362,6 +1439,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "forge_rhi"
+version = "1.0.0"
+dependencies = [
+ "pollster",
+ "serde",
+ "thiserror 1.0.69",
+ "tracing",
+ "wgpu",
+]
+
+[[package]]
 name = "forge_runtime"
 version = "1.0.0"
 dependencies = [
@@ -1375,6 +1463,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "forge_scene"
+version = "1.0.0"
+dependencies = [
+ "forge_core",
+ "glam",
+ "serde",
+ "uuid",
+]
+
+[[package]]
 name = "forge_settings"
 version = "1.0.0"
 dependencies = [
@@ -1382,6 +1480,15 @@ dependencies = [
  "dirs 5.0.1",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "forge_shader"
+version = "1.0.0"
+dependencies = [
+ "serde",
+ "sha2",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -1393,6 +1500,16 @@ dependencies = [
  "forge_logs",
  "forge_settings",
  "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "forge_tools"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "forge_rhi",
  "serde_json",
 ]
 
@@ -1766,6 +1883,45 @@ dependencies = [
 ]
 
 [[package]]
+name = "gltf"
+version = "1.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e3ce1918195723ce6ac74e80542c5a96a40c2b26162c1957a5cd70799b8cacf7"
+dependencies = [
+ "base64 0.13.1",
+ "byteorder",
+ "gltf-json",
+ "image",
+ "lazy_static",
+ "serde_json",
+ "urlencoding",
+]
+
+[[package]]
+name = "gltf-derive"
+version = "1.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14070e711538afba5d6c807edb74bcb84e5dbb9211a3bf5dea0dfab5b24f4c51"
+dependencies = [
+ "inflections",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.118",
+]
+
+[[package]]
+name = "gltf-json"
+version = "1.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e6176f9d60a7eab0a877e8e96548605dedbde9190a7ae1e80bbcc1c9af03ab14"
+dependencies = [
+ "gltf-derive",
+ "serde",
+ "serde_derive",
+ "serde_json",
+]
+
+[[package]]
 name = "glutin_wgl_sys"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1919,7 +2075,7 @@ dependencies = [
  "bitflags 2.13.0",
  "com",
  "libc",
- "libloading 0.7.4",
+ "libloading 0.8.9",
  "thiserror 1.0.69",
  "widestring",
  "winapi",
@@ -2202,6 +2358,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "image"
+version = "0.25.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85ab80394333c02fe689eaf900ab500fbd0c2213da414687ebf995a65d5a6104"
+dependencies = [
+ "bytemuck",
+ "byteorder-lite",
+ "moxcms",
+ "num-traits",
+ "png 0.18.1",
+ "zune-core",
+ "zune-jpeg",
+]
+
+[[package]]
 name = "indexmap"
 version = "1.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2232,6 +2403,12 @@ checksum = "a588916bfdfd92e71cacef98a63d9b1f0d74d6599980d11894290e7ddefffcf7"
 dependencies = [
  "cfb",
 ]
+
+[[package]]
+name = "inflections"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a257582fdcde896fd96463bf2d40eefea0580021c0712a0e2b028b60b47a837a"
 
 [[package]]
 name = "inotify"
@@ -2650,6 +2827,16 @@ dependencies = [
  "libc",
  "wasi",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "moxcms"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bb85c154ba489f01b25c0d36ae69a87e4a1c73a72631fc6c0eb6dde34a73e44b"
+dependencies = [
+ "num-traits",
+ "pxfm",
 ]
 
 [[package]]
@@ -3367,6 +3554,12 @@ name = "profiling"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3d595e54a326bc53c1c197b32d295e14b169e3cfeaa8dc82b529f947fba6bcf5"
+
+[[package]]
+name = "pxfm"
+version = "0.1.29"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e0c5ccf5294c6ccd63a74f1565028353830a9c2f5eb0c682c355c471726a6e3f"
 
 [[package]]
 name = "quick-xml"
@@ -5050,6 +5243,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "urlencoding"
+version = "2.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "daf8dba3b7eb870caf1ddeed7bc9d2a049f3cfdfae7cb521b087cc33ae4c49da"
+
+[[package]]
 name = "urlpattern"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5529,7 +5728,7 @@ dependencies = [
  "js-sys",
  "khronos-egl",
  "libc",
- "libloading 0.7.4",
+ "libloading 0.8.9",
  "log",
  "metal",
  "naga",
@@ -6390,3 +6589,18 @@ name = "zmij"
 version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"
+
+[[package]]
+name = "zune-core"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb8a0807f7c01457d0379ba880ba6322660448ddebc890ce29bb64da71fb40f9"
+
+[[package]]
+name = "zune-jpeg"
+version = "0.5.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "27bc9d5b815bc103f142aa054f561d9187d191692ec7c2d1e2b4737f8dbd7296"
+dependencies = [
+ "zune-core",
+]

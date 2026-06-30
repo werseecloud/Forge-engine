@@ -27,6 +27,8 @@ pub struct AppSettings {
     pub autosave_enabled: bool,
     #[serde(default = "default_autosave_interval")]
     pub autosave_interval: u32,
+    #[serde(default)]
+    pub graphics_settings: forge_renderer::GraphicsSettings,
 }
 
 fn default_theme() -> String {

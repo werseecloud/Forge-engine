@@ -1,0 +1,17 @@
+[package]
+name = "forge_raytracing"
+version = "1.0.0"
+edition = "2021"
+
+[features]
+default = []
+raytracing = []
+pathtracing = []
+webgpu = []
+vulkan = []
+dx12 = []
+metal = []
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+thiserror = "1"

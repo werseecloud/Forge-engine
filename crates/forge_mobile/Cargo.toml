@@ -1,0 +1,14 @@
+[package]
+name = "forge_mobile"
+version = "1.0.0"
+edition = "2021"
+
+[features]
+default = []
+mobile = []
+vulkan = []
+metal = []
+opengl_fallback = []
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }

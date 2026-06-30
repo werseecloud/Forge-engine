@@ -14,3 +14,4 @@ pub mod installer_folder_service;
 pub mod installer_shortcut_service;
 pub mod installer_association_service;
 pub mod installer_service;
+pub mod renderer_service;
