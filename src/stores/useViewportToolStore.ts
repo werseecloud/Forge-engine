@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type ViewportTool = "select" | "move" | "rotate";
+export type ViewportTool = "select" | "move" | "rotate" | "scale";
 
 interface ViewportToolState {
   activeTool: ViewportTool;

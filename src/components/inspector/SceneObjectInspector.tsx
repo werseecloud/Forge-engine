@@ -22,7 +22,7 @@ export function SceneObjectInspector({ object, onError }: SceneObjectInspectorPr
   const setSelectedSceneObject = useSceneStore((state) => state.setSelectedSceneObject);
   const selectEntity = useAppStore((state) => state.selectEntity);
 
-  useEffect(() => setDraft(object), [object.id]);
+  useEffect(() => setDraft(object), [object]);
 
   async function save() {
     if (!currentProject || !activeLevel) return;
@@ -88,4 +88,3 @@ export function SceneObjectInspector({ object, onError }: SceneObjectInspectorPr
     </div>
   );
 }
-

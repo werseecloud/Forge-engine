@@ -12,6 +12,12 @@ html, body, #root {
 button, input { font: inherit; }
 button { border: 0; color: inherit; cursor: pointer; }
 button:disabled { opacity: .45; cursor: not-allowed; }
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid rgba(41,151,255,.78);
+  outline-offset: 2px;
+}
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(41,151,255,.55) rgba(255,255,255,.045);
@@ -427,6 +433,11 @@ footer button:first-child { margin-right: auto; }
 .toolbar-select:hover {
   background: rgba(255,255,255,.09);
   color: #fff;
+}
+.icon-button:disabled,
+.pill-button:disabled {
+  background: transparent;
+  box-shadow: none;
 }
 .icon-button:active:not(:disabled),
 .pill-button:active:not(:disabled) {

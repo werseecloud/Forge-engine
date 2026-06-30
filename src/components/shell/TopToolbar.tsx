@@ -1,4 +1,4 @@
-import { ChevronDown, FolderOpen, GitBranch, MousePointer2, Move3D, Pause, Play, Plus, RotateCcw, Save, Settings, SkipForward, Square, UserCircle } from "lucide-react";
+import { ChevronDown, FolderOpen, GitBranch, Maximize2, MousePointer2, Move3D, Pause, Play, Plus, RotateCcw, Save, Settings, SkipForward, Square, UserCircle } from "lucide-react";
 import { useAppStore } from "../../stores/useAppStore";
 import { useEditorModeStore } from "../../stores/useEditorModeStore";
 import { useProjectStore } from "../../stores/useProjectStore";
@@ -113,6 +113,7 @@ export function TopToolbar({ onCreateProject, onOpenProject, onSettings, onSave,
         <IconButton label="Select tool" active={activeTool === "select"} onClick={() => activateTool("select")}><MousePointer2 size={16} /></IconButton>
         <IconButton label="Move tool" active={activeTool === "move"} onClick={() => activateTool("move")}><Move3D size={16} /></IconButton>
         <IconButton label="Rotate tool" active={activeTool === "rotate"} onClick={() => activateTool("rotate")}><RotateCcw size={16} /></IconButton>
+        <IconButton label="Scale tool" active={activeTool === "scale"} onClick={() => activateTool("scale")}><Maximize2 size={16} /></IconButton>
         <IconButton label={selectedSceneObject ? "Open selected entity graph" : "Open Blueprint browser"} onClick={openBlueprintGraph}><GitBranch size={16} /></IconButton>
       </div>
 
