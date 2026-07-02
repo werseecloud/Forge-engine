@@ -14,6 +14,8 @@ interface BlueprintState {
   diagnostics: BlueprintDiagnostic[];
   compileResult: BlueprintCompileResult | null;
   runResult: BlueprintRunResult | null;
+  dirty: boolean;
+  clipboard: BlueprintNode[];
   searchOpen: boolean;
   searchPosition: { x: number; y: number };
   zoom: number;
@@ -33,6 +35,10 @@ interface BlueprintState {
   moveNode: (nodeId: string, position: { x: number; y: number }) => void;
   updateNodeProperties: (nodeId: string, properties: Record<string, unknown>) => void;
   deleteSelection: () => void;
+  copySelection: () => void;
+  pasteSelection: () => void;
+  createCommentBox: () => void;
+  focusSelection: () => void;
   beginConnection: (nodeId: string, pinId: string, direction: "input" | "output") => void;
   completeConnection: (nodeId: string, pinId: string, direction: "input" | "output") => void;
   clearConnection: () => void;
@@ -55,6 +61,8 @@ export const useBlueprintStore = create<BlueprintState>((set, get) => ({
   diagnostics: [],
   compileResult: null,
   runResult: null,
+  dirty: false,
+  clipboard: [],
   searchOpen: false,
   searchPosition: { x: 240, y: 180 },
   zoom: 1,
@@ -70,12 +78,12 @@ export const useBlueprintStore = create<BlueprintState>((set, get) => ({
   async createGraph(projectRoot, name, graphType) {
     const graph = await commands.createBlueprintGraph(projectRoot, name, graphType);
     const graphs = await commands.listBlueprintGraphs(projectRoot);
-    set({ activeGraph: graph, graphs, selectedNodeIds: [], selectedEdgeIds: [], diagnostics: [], compileResult: null, runResult: null, history: [], future: [] });
+    set({ activeGraph: graph, graphs, selectedNodeIds: [], selectedEdgeIds: [], diagnostics: [], compileResult: null, runResult: null, history: [], future: [], dirty: false });
   },
 
   async openGraph(projectRoot, relativePath) {
     const graph = await commands.readBlueprintGraph(projectRoot, relativePath);
-    set({ activeGraph: graph, selectedNodeIds: [], selectedEdgeIds: [], diagnostics: validateGraph(graph), compileResult: null, runResult: null, history: [], future: [] });
+    set({ activeGraph: graph, selectedNodeIds: [], selectedEdgeIds: [], diagnostics: validateGraph(graph), compileResult: null, runResult: null, history: [], future: [], dirty: false });
   },
 
   async saveGraph(projectRoot) {
@@ -83,7 +91,7 @@ export const useBlueprintStore = create<BlueprintState>((set, get) => ({
     if (!graph) return;
     const saved = await commands.saveBlueprintGraph(projectRoot, graph);
     const graphs = await commands.listBlueprintGraphs(projectRoot);
-    set({ activeGraph: saved, graphs, diagnostics: validateGraph(saved) });
+    set({ activeGraph: saved, graphs, diagnostics: validateGraph(saved), dirty: false });
   },
 
   async deleteGraph(projectRoot, relativePath) {
@@ -95,11 +103,11 @@ export const useBlueprintStore = create<BlueprintState>((set, get) => ({
   async duplicateGraph(projectRoot, relativePath, name) {
     const graph = await commands.duplicateBlueprintGraph(projectRoot, relativePath, name);
     const graphs = await commands.listBlueprintGraphs(projectRoot);
-    set({ graphs, activeGraph: graph });
+    set({ graphs, activeGraph: graph, dirty: false });
   },
 
   setActiveGraph(graph) {
-    set({ activeGraph: graph, diagnostics: validateGraph(graph) });
+    set({ activeGraph: graph, diagnostics: validateGraph(graph), dirty: true });
   },
 
   selectNode(nodeId, append = false) {
@@ -118,14 +126,14 @@ export const useBlueprintStore = create<BlueprintState>((set, get) => ({
     pushGraph(set, graph);
     const node = createNodeFromDefinition(definition, position.x, position.y);
     const next = { ...graph, nodes: [...graph.nodes, node], updatedAt: new Date().toISOString() };
-    set({ activeGraph: next, selectedNodeIds: [node.id], searchOpen: false, diagnostics: validateGraph(next), future: [] });
+    set({ activeGraph: next, selectedNodeIds: [node.id], searchOpen: false, diagnostics: validateGraph(next), future: [], dirty: true });
   },
 
   moveNode(nodeId, position) {
     const graph = get().activeGraph;
     if (!graph) return;
     const next = { ...graph, nodes: graph.nodes.map((node) => node.id === nodeId ? { ...node, position } : node), updatedAt: new Date().toISOString() };
-    set({ activeGraph: next });
+    set({ activeGraph: next, dirty: true });
   },
 
   updateNodeProperties(nodeId, properties) {
@@ -133,7 +141,7 @@ export const useBlueprintStore = create<BlueprintState>((set, get) => ({
     if (!graph) return;
     pushGraph(set, graph);
     const next = { ...graph, nodes: graph.nodes.map((node) => node.id === nodeId ? { ...node, properties: { ...node.properties, ...properties } } : node), updatedAt: new Date().toISOString() };
-    set({ activeGraph: next, diagnostics: validateGraph(next), future: [] });
+    set({ activeGraph: next, diagnostics: validateGraph(next), future: [], dirty: true });
   },
 
   deleteSelection() {
@@ -148,7 +156,41 @@ export const useBlueprintStore = create<BlueprintState>((set, get) => ({
       edges: graph.edges.filter((edge) => !edges.has(edge.id) && !nodes.has(edge.fromNodeId) && !nodes.has(edge.toNodeId)),
       updatedAt: new Date().toISOString()
     };
-    set({ activeGraph: next, selectedNodeIds: [], selectedEdgeIds: [], diagnostics: validateGraph(next), future: [] });
+    set({ activeGraph: next, selectedNodeIds: [], selectedEdgeIds: [], diagnostics: validateGraph(next), future: [], dirty: true });
+  },
+
+  copySelection() {
+    const graph = get().activeGraph;
+    if (!graph) return;
+    const selected = new Set(get().selectedNodeIds);
+    set({ clipboard: graph.nodes.filter((node) => selected.has(node.id)).map((node) => structuredClone(node)) });
+  },
+
+  pasteSelection() {
+    const graph = get().activeGraph;
+    const clipboard = get().clipboard;
+    if (!graph || clipboard.length === 0) return;
+    pushGraph(set, graph);
+    const clones = clipboard.map((node, index) => ({
+      ...structuredClone(node),
+      id: crypto.randomUUID(),
+      position: { x: node.position.x + 44 + index * 14, y: node.position.y + 44 + index * 14 }
+    }));
+    const next = { ...graph, nodes: [...graph.nodes, ...clones], updatedAt: new Date().toISOString() };
+    set({ activeGraph: next, selectedNodeIds: clones.map((node) => node.id), diagnostics: validateGraph(next), future: [], dirty: true });
+  },
+
+  createCommentBox() {
+    get().addNode("custom.comment_box", { x: 260, y: 180 });
+  },
+
+  focusSelection() {
+    const graph = get().activeGraph;
+    const selected = get().selectedNodeIds;
+    if (!graph || selected.length === 0) return;
+    const node = graph.nodes.find((item) => item.id === selected[0]);
+    if (!node) return;
+    set({ pan: { x: 420 - node.position.x, y: 240 - node.position.y }, zoom: 1 });
   },
 
   beginConnection(nodeId, pinId, direction) {
@@ -177,7 +219,7 @@ export const useBlueprintStore = create<BlueprintState>((set, get) => ({
     };
     pushGraph(set, graph);
     const next = { ...graph, edges: [...graph.edges.filter((item) => !(item.toNodeId === to.nodeId && item.toPinId === to.pinId && !findInputPin(graph, to.nodeId, to.pinId)?.multipleConnectionsAllowed)), edge], updatedAt: new Date().toISOString() };
-    set({ activeGraph: next, pendingConnection: null, diagnostics: validateGraph(next), future: [] });
+    set({ activeGraph: next, pendingConnection: null, diagnostics: validateGraph(next), future: [], dirty: true });
   },
 
   clearConnection() {
@@ -201,7 +243,7 @@ export const useBlueprintStore = create<BlueprintState>((set, get) => ({
     if (!graph) return;
     const localDiagnostics = validateGraph(graph);
     if (localDiagnostics.some((diag) => diag.severity === "error")) {
-      set({ diagnostics: localDiagnostics, compileResult: { success: false, diagnostics: localDiagnostics, ir: null } });
+      set({ diagnostics: localDiagnostics, compileResult: { success: false, diagnostics: localDiagnostics, ir: null, compileTimeMicros: 0 } });
       return;
     }
     const result = await commands.compileBlueprintGraph(graph);
@@ -220,7 +262,7 @@ export const useBlueprintStore = create<BlueprintState>((set, get) => ({
     if (!graph) return;
     pushGraph(set, graph);
     const next = autoLayoutGraph(graph);
-    set({ activeGraph: next, diagnostics: validateGraph(next), future: [] });
+    set({ activeGraph: next, diagnostics: validateGraph(next), future: [], dirty: true });
   },
 
   undo() {
@@ -228,7 +270,7 @@ export const useBlueprintStore = create<BlueprintState>((set, get) => ({
     const history = get().history;
     if (!graph || history.length === 0) return;
     const previous = history[history.length - 1];
-    set({ activeGraph: previous, history: history.slice(0, -1), future: [graph, ...get().future], diagnostics: validateGraph(previous) });
+    set({ activeGraph: previous, history: history.slice(0, -1), future: [graph, ...get().future], diagnostics: validateGraph(previous), dirty: true });
   },
 
   redo() {
@@ -236,7 +278,7 @@ export const useBlueprintStore = create<BlueprintState>((set, get) => ({
     const future = get().future;
     if (!graph || future.length === 0) return;
     const next = future[0];
-    set({ activeGraph: next, history: [...get().history, graph], future: future.slice(1), diagnostics: validateGraph(next) });
+    set({ activeGraph: next, history: [...get().history, graph], future: future.slice(1), diagnostics: validateGraph(next), dirty: true });
   }
 }));
 

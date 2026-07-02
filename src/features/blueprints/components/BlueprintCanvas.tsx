@@ -70,6 +70,14 @@ export function BlueprintCanvas() {
         const rect = event.currentTarget.getBoundingClientRect();
         openSearch(toCanvasPoint(event.clientX, event.clientY, rect));
       }}
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={(event) => {
+        event.preventDefault();
+        const type = event.dataTransfer.getData("application/forge-node-type");
+        if (!type) return;
+        const rect = event.currentTarget.getBoundingClientRect();
+        useBlueprintStore.getState().addNode(type, toCanvasPoint(event.clientX, event.clientY, rect));
+      }}
     >
       <div className="blueprint-canvas__world" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}>
         <svg className="blueprint-edges" width="6000" height="4000" viewBox="-1200 -900 6000 4000">

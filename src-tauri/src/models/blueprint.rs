@@ -137,6 +137,7 @@ pub struct BlueprintCompileResult {
     pub success: bool,
     pub diagnostics: Vec<BlueprintDiagnostic>,
     pub ir: Option<BlueprintIr>,
+    pub compile_time_micros: u128,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -154,5 +155,24 @@ pub struct BlueprintRunResult {
     pub success: bool,
     pub diagnostics: Vec<BlueprintDiagnostic>,
     pub traces: Vec<BlueprintExecutionTrace>,
+    pub commands: Vec<BlueprintRuntimeCommand>,
     pub variables: HashMap<String, Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BlueprintRuntimeCommand {
+    pub command_type: String,
+    pub target: Option<String>,
+    pub payload: HashMap<String, Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BlueprintNodeDefinition {
+    pub type_id: String,
+    pub display_name: String,
+    pub category: String,
+    pub description: String,
+    pub runtime_supported: bool,
 }

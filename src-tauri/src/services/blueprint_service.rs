@@ -15,14 +15,42 @@ use crate::utils::paths::{
 const SUPPORTED_RUNTIME_NODES: &[&str] = &[
     "event.begin_play",
     "event.tick",
+    "event.key_pressed",
+    "event.trigger_enter",
     "flow.branch",
+    "flow.sequence",
     "flow.delay",
+    "flow.do_once",
     "debug.print_string",
+    "debug.print_warning",
+    "debug.breakpoint",
+    "debug.watch_value",
     "variable.set",
     "variable.get",
+    "variable.toggle_bool",
     "math.add",
-    "math.compare",
+    "math.subtract",
+    "math.multiply",
+    "math.divide",
+    "math.less_equal",
+    "math.greater_than",
+    "math.equal_bool",
+    "entity.self",
     "entity.spawn",
+    "entity.destroy",
+    "entity.find_by_name",
+    "entity.find_by_tag",
+    "transform.get_location",
+    "transform.set_location",
+    "transform.add_location_offset",
+    "transform.distance_between",
+    "physics.add_force",
+    "physics.set_velocity",
+    "physics.raycast",
+    "audio.play_sound",
+    "audio.play_sound_at_location",
+    "scene.load",
+    "scene.reload",
 ];
 
 pub fn blueprint_dir(project_root: &str) -> Result<PathBuf> {
@@ -122,6 +150,7 @@ pub fn duplicate_graph(
 }
 
 pub fn compile_graph(graph: &BlueprintGraph) -> BlueprintCompileResult {
+    let started = Instant::now();
     let diagnostics = validate_graph(graph);
     let has_errors = diagnostics.iter().any(|diag| diag.severity == "error");
     if has_errors {
@@ -129,6 +158,7 @@ pub fn compile_graph(graph: &BlueprintGraph) -> BlueprintCompileResult {
             success: false,
             diagnostics,
             ir: None,
+            compile_time_micros: started.elapsed().as_micros(),
         };
     }
 
@@ -169,6 +199,7 @@ pub fn compile_graph(graph: &BlueprintGraph) -> BlueprintCompileResult {
                 .collect(),
             entry_nodes,
         }),
+        compile_time_micros: started.elapsed().as_micros(),
     }
 }
 
@@ -179,6 +210,7 @@ pub fn run_preview(graph: &BlueprintGraph) -> BlueprintRunResult {
             success: false,
             diagnostics: compile.diagnostics,
             traces: Vec::new(),
+            commands: Vec::new(),
             variables: HashMap::new(),
         };
     }
@@ -190,6 +222,7 @@ pub fn run_preview(graph: &BlueprintGraph) -> BlueprintRunResult {
         .map(|var| (var.name.clone(), var.default_value.clone()))
         .collect::<HashMap<_, _>>();
     let mut traces = Vec::new();
+    let mut commands = Vec::new();
     let node_map = graph
         .nodes
         .iter()
@@ -233,7 +266,7 @@ pub fn run_preview(graph: &BlueprintGraph) -> BlueprintRunResult {
             continue;
         };
         let start = Instant::now();
-        let message = execute_node(node, graph, &mut variables);
+        let message = execute_node(node, graph, &mut variables, &mut commands);
         traces.push(BlueprintExecutionTrace {
             node_id: node.id.clone(),
             node_title: node.title.clone(),
@@ -271,6 +304,7 @@ pub fn run_preview(graph: &BlueprintGraph) -> BlueprintRunResult {
         success: !diagnostics.iter().any(|diag| diag.severity == "error"),
         diagnostics,
         traces,
+        commands,
         variables,
     }
 }
@@ -453,10 +487,19 @@ fn execute_node(
     node: &BlueprintNode,
     _graph: &BlueprintGraph,
     variables: &mut HashMap<String, Value>,
+    commands: &mut Vec<BlueprintRuntimeCommand>,
 ) -> String {
     match node.node_type.as_str() {
         "event.begin_play" => "Begin Play event fired.".to_string(),
         "event.tick" => "Tick event preview fired once.".to_string(),
+        "event.key_pressed" => format!(
+            "KeyPressed event preview fired for {}.",
+            node.properties
+                .get("key")
+                .and_then(Value::as_str)
+                .unwrap_or("E")
+        ),
+        "event.trigger_enter" => "TriggerEnter event preview fired.".to_string(),
         "debug.print_string" => format!(
             "Print String: {}",
             node.properties
@@ -464,6 +507,15 @@ fn execute_node(
                 .and_then(Value::as_str)
                 .unwrap_or("Hello from Forge Blueprint")
         ),
+        "debug.print_warning" => format!(
+            "Print Warning: {}",
+            node.properties
+                .get("message")
+                .and_then(Value::as_str)
+                .unwrap_or("Warning")
+        ),
+        "debug.breakpoint" => "Breakpoint reached in preview mode.".to_string(),
+        "debug.watch_value" => "Watch Value sampled.".to_string(),
         "flow.delay" => format!(
             "Delay scheduled for {} seconds.",
             node.properties
@@ -471,6 +523,8 @@ fn execute_node(
                 .and_then(Value::as_f64)
                 .unwrap_or(1.0)
         ),
+        "flow.sequence" => "Sequence routed execution outputs.".to_string(),
+        "flow.do_once" => "Do Once allowed execution in preview.".to_string(),
         "variable.set" => {
             let name = node
                 .properties
@@ -494,16 +548,120 @@ fn execute_node(
             )
         }
         "math.add" => "Add evaluated by data resolver.".to_string(),
-        "math.compare" => "Compare evaluated by data resolver.".to_string(),
+        "math.subtract" => "Subtract evaluated by data resolver.".to_string(),
+        "math.multiply" => "Multiply evaluated by data resolver.".to_string(),
+        "math.divide" => "Divide evaluated by data resolver.".to_string(),
+        "math.less_equal" => "Less Or Equal evaluated by data resolver.".to_string(),
+        "math.greater_than" => "Greater Than evaluated by data resolver.".to_string(),
+        "math.equal_bool" => "Equal Bool evaluated by data resolver.".to_string(),
+        "entity.self" => "Self entity reference resolved.".to_string(),
         "entity.spawn" => format!(
             "Spawn Entity command queued: {}",
-            node.properties
-                .get("prefab")
-                .and_then(Value::as_str)
-                .unwrap_or("Entity")
+            queue_command(
+                commands,
+                "SpawnEntity",
+                None,
+                "prefab",
+                node.properties
+                    .get("prefab")
+                    .and_then(Value::as_str)
+                    .unwrap_or("Entity")
+            )
         ),
+        "entity.destroy" => {
+            queue_command(
+                commands,
+                "DestroyEntity",
+                Some("input.entity"),
+                "reason",
+                "Blueprint",
+            );
+            "Destroy Entity command queued.".to_string()
+        }
+        "entity.find_by_name" => "Find Entity By Name query prepared.".to_string(),
+        "entity.find_by_tag" => "Find Entity By Tag query prepared.".to_string(),
+        "transform.get_location" => "Get Location query prepared.".to_string(),
+        "transform.set_location" => {
+            queue_command(
+                commands,
+                "SetTransform",
+                Some("input.entity"),
+                "field",
+                "location",
+            );
+            "Set Location command queued.".to_string()
+        }
+        "transform.add_location_offset" => {
+            queue_command(
+                commands,
+                "AddLocationOffset",
+                Some("input.entity"),
+                "field",
+                "offset",
+            );
+            "Add Location Offset command queued.".to_string()
+        }
+        "transform.distance_between" => "Distance Between evaluated by data resolver.".to_string(),
+        "physics.add_force" => {
+            queue_command(commands, "AddForce", Some("input.entity"), "field", "force");
+            "Add Force command queued.".to_string()
+        }
+        "physics.set_velocity" => {
+            queue_command(
+                commands,
+                "SetVelocity",
+                Some("input.entity"),
+                "field",
+                "velocity",
+            );
+            "Set Velocity command queued.".to_string()
+        }
+        "physics.raycast" => "Raycast command queued and hit result prepared.".to_string(),
+        "audio.play_sound" => {
+            queue_command(commands, "PlaySound2D", None, "sound", "input.sound");
+            "Play Sound 2D command queued.".to_string()
+        }
+        "audio.play_sound_at_location" => {
+            queue_command(
+                commands,
+                "PlaySoundAtLocation",
+                None,
+                "sound",
+                "input.sound",
+            );
+            "Play Sound At Location command queued.".to_string()
+        }
+        "scene.load" => {
+            queue_command(commands, "LoadScene", None, "scene", "input.scene");
+            "Load Scene command queued.".to_string()
+        }
+        "scene.reload" => {
+            queue_command(commands, "ReloadScene", None, "scene", "current");
+            "Reload Scene command queued.".to_string()
+        }
         _ => format!("{} skipped: no VM handler registered.", node.title),
     }
+}
+
+fn queue_command(
+    commands: &mut Vec<BlueprintRuntimeCommand>,
+    command_type: &str,
+    target: Option<&str>,
+    key: &str,
+    value: impl Into<Value>,
+) -> String {
+    let mut payload = HashMap::new();
+    payload.insert(key.to_string(), value.into());
+    let display_value = payload
+        .get(key)
+        .map(|value| value.to_string())
+        .unwrap_or_else(|| "null".to_string());
+    commands.push(BlueprintRuntimeCommand {
+        command_type: command_type.to_string(),
+        target: target.map(str::to_string),
+        payload,
+    });
+    display_value
 }
 
 fn begin_play_node() -> BlueprintNode {

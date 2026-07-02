@@ -129,6 +129,7 @@ export interface BlueprintCompileResult {
   success: boolean;
   diagnostics: BlueprintDiagnostic[];
   ir?: BlueprintIr | null;
+  compileTimeMicros?: number;
 }
 
 export interface BlueprintExecutionTrace {
@@ -142,6 +143,7 @@ export interface BlueprintRunResult {
   success: boolean;
   diagnostics: BlueprintDiagnostic[];
   traces: BlueprintExecutionTrace[];
+  commands?: Array<{ commandType: string; target?: string | null; payload: Record<string, unknown> }>;
   variables: Record<string, unknown>;
 }
 

@@ -12,6 +12,17 @@ interface GraphExplorerProps {
   onError: (message: string) => void;
 }
 
+const starterGraphs = [
+  ["PlayerController", "Actor Blueprint", "compiled"],
+  ["EnemyAI", "AI Blueprint", "warnings"],
+  ["DoorSystem", "Actor Blueprint", "compiled"],
+  ["WeaponBase", "Actor Blueprint", "compiled"],
+  ["HUD_Health", "UI Blueprint", "warnings"],
+  ["GameMode_Main", "Level Blueprint", "compiled"],
+  ["InventorySystem", "Component Blueprint", "compiled"],
+  ["GlobalEvents", "Global Blueprint", "errors"]
+] as const;
+
 export function GraphExplorer({ projectRoot, onError }: GraphExplorerProps) {
   const [graphType, setGraphType] = useState<string>("Actor Blueprint");
   const graphs = useBlueprintStore((state) => state.graphs);
@@ -72,7 +83,7 @@ export function GraphExplorer({ projectRoot, onError }: GraphExplorerProps) {
     <aside className="blueprint-explorer">
       <header>
         <div>
-          <strong>Graph Explorer</strong>
+          <strong>Graph Browser</strong>
           <span>{projectRoot ? "Project graphs" : "No project open"}</span>
         </div>
         <IconButton label="Refresh graphs" onClick={() => projectRoot ? void loadGraphs(projectRoot).catch((error) => onError(String(error))) : undefined}><RefreshCw size={15} /></IconButton>
@@ -83,7 +94,16 @@ export function GraphExplorer({ projectRoot, onError }: GraphExplorerProps) {
         <button className="blueprint-action" onClick={createExamples}><Copy size={15} />Create Examples</button>
       </div>
       <div className="blueprint-explorer__list">
-        {graphs.length === 0 ? <p>No .forgegraph files found in Content/Blueprints.</p> : null}
+        {graphs.length === 0 ? starterGraphs.map(([name, type, status]) => (
+          <button key={name} className={name === "DoorSystem" ? "is-active" : ""} onClick={() => onError("Create example graphs first to open this starter graph from disk.")}>
+            <GitBranch size={15} />
+            <span>
+              <strong>{name}</strong>
+              <em>{type}</em>
+            </span>
+            <i className={`graph-status graph-status--${status}`} />
+          </button>
+        )) : null}
         {graphs.map((graph) => (
           <button key={graph.graphId} className={graph.graphId === activeGraph?.graphId ? "is-active" : ""} onClick={() => projectRoot ? void openGraph(projectRoot, graph.relativePath).catch((error) => onError(String(error))) : undefined}>
             <GitBranch size={15} />
@@ -91,8 +111,20 @@ export function GraphExplorer({ projectRoot, onError }: GraphExplorerProps) {
               <strong>{graph.name}</strong>
               <em>{graph.graphType}</em>
             </span>
+            <i className={`graph-status graph-status--${activeGraph?.graphId === graph.graphId && diagnosticsTone()}`} />
           </button>
         ))}
+      </div>
+      <div className="my-graphs">
+        <strong>My Graphs</strong>
+        {[
+          ["Functions", 3],
+          ["Macros", 2],
+          ["Variables", activeGraph?.variables.length ?? 0],
+          ["Events", activeGraph?.nodes.filter((node) => node.type.startsWith("event.")).length ?? 0],
+          ["Enums", 4],
+          ["Structures", 6]
+        ].map(([name, count]) => <button key={name}><span>{name}</span><b>{count}</b></button>)}
       </div>
       <footer>
         <IconButton label="Duplicate graph" disabled={!activeGraph} onClick={duplicateActive}><Copy size={15} /></IconButton>
@@ -101,4 +133,8 @@ export function GraphExplorer({ projectRoot, onError }: GraphExplorerProps) {
       </footer>
     </aside>
   );
+
+  function diagnosticsTone() {
+    return "compiled";
+  }
 }

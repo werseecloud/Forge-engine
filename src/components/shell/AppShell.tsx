@@ -161,17 +161,7 @@ export function AppShell() {
   const projectRoot = currentProject?.rootPath ?? null;
 
   return (
-    <motion.div className="app-shell" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <WindowsTitleBar />
-      <TopToolbar
-        onCreateProject={() => setCreateProjectOpen(true)}
-        onOpenProject={openProject}
-        onBlueprints={() => setActivePanel("blueprints")}
-        onGraphicsSettings={() => setGraphicsSettingsOpen(true)}
-        onSettings={() => setSettingsOpen(true)}
-        onSave={saveActiveLevel}
-        onNotify={toast}
-      />
+    <motion.div className={`app-shell ${activePanel === "blueprints" ? "app-shell--blueprints" : ""}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       {activePanel === "blueprints" ? (
         <BlueprintsPage
           projectRoot={projectRoot}
@@ -180,21 +170,33 @@ export function AppShell() {
           onSuccess={(message) => toast("success", message)}
         />
       ) : (
-        <main className="editor-grid">
-          <LeftDock onCreateLevel={() => setCreateLevelOpen(true)} />
-          <div className="center-stack">
-            <CenterViewport fps={fps} setFps={setFps} onCreateProject={() => setCreateProjectOpen(true)} onOpenProject={openProject} onCreateLevel={() => setCreateLevelOpen(true)} onError={(message) => toast("error", message)} />
-            <BottomDrawer
-              onImportStatus={setLastImportStatus}
-              onError={(message) => toast("error", message)}
-              onSuccess={(message) => toast("success", message)}
-              onRefresh={refreshProjectData}
-            />
-          </div>
-          <RightDock onError={(message) => toast("error", message)} />
-        </main>
+        <>
+          <WindowsTitleBar />
+          <TopToolbar
+            onCreateProject={() => setCreateProjectOpen(true)}
+            onOpenProject={openProject}
+            onBlueprints={() => setActivePanel("blueprints")}
+            onGraphicsSettings={() => setGraphicsSettingsOpen(true)}
+            onSettings={() => setSettingsOpen(true)}
+            onSave={saveActiveLevel}
+            onNotify={toast}
+          />
+          <main className="editor-grid">
+            <LeftDock onCreateLevel={() => setCreateLevelOpen(true)} />
+            <div className="center-stack">
+              <CenterViewport fps={fps} setFps={setFps} onCreateProject={() => setCreateProjectOpen(true)} onOpenProject={openProject} onCreateLevel={() => setCreateLevelOpen(true)} onError={(message) => toast("error", message)} />
+              <BottomDrawer
+                onImportStatus={setLastImportStatus}
+                onError={(message) => toast("error", message)}
+                onSuccess={(message) => toast("success", message)}
+                onRefresh={refreshProjectData}
+              />
+            </div>
+            <RightDock onError={(message) => toast("error", message)} />
+          </main>
+          <StatusBar fps={fps} watcher={watcher} lastImportStatus={lastImportStatus} />
+        </>
       )}
-      <StatusBar fps={fps} watcher={watcher} lastImportStatus={lastImportStatus} />
 
       <CreateProjectModal
         open={createProjectOpen}

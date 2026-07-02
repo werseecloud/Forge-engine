@@ -13,7 +13,7 @@ export function BlueprintConsole() {
       <header>
         <div>
           <strong>Compiler / Console</strong>
-          <span>{compileResult?.success ? "Compiled graph ready" : "Validation and runtime trace"}</span>
+          <span>{compileResult?.success ? `Compiled graph ready in ${Math.round((compileResult.compileTimeMicros ?? 0) / 1000)} ms` : "Validation and runtime trace"}</span>
         </div>
         <button className="blueprint-action" onClick={() => void compile()}><CheckCircle2 size={15} />Compile Graph</button>
         <button className="blueprint-action" onClick={() => void runPreview()}><PlayCircle size={15} />Run Preview</button>
@@ -36,6 +36,13 @@ export function BlueprintConsole() {
               <PlayCircle size={12} />
               <span>{trace.nodeTitle}: {trace.message}</span>
               <em>{trace.elapsedMicros}µs</em>
+            </p>
+          ))}
+          {(runResult?.commands ?? []).map((command, index) => (
+            <p key={`command-${index}`} className="is-info">
+              <PlayCircle size={12} />
+              <span>Command queued: {command.commandType}</span>
+              <em>{Object.keys(command.payload).join(", ")}</em>
             </p>
           ))}
         </div>
