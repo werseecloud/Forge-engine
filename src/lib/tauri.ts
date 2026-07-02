@@ -6,10 +6,13 @@ import type { SceneLevel, SceneObject, LevelSummary } from "../types/scene";
 import type { AppSettings } from "../types/settings";
 import type {
   AnimationDatabase,
+  AnimationSelectionInput,
+  AnimationSelectionResult,
   CharacterImportRequest,
   CharacterImportResult,
   CharacterRuntimePlan,
   DefaultCharacterAssets,
+  GeneratedAnimationStateMachine,
   HumanoidDetectionResult
 } from "../types/character";
 import type { BlueprintCompileResult, BlueprintGraph, BlueprintGraphSummary, BlueprintRunResult } from "../features/blueprints/types/blueprint-types";
@@ -101,5 +104,9 @@ export const commands = {
   importCharacter: (request: CharacterImportRequest) =>
     invoke<CharacterImportResult>("import_character", { request }),
   buildCharacterRuntimePlan: (projectRoot: string, characterManifestPath: string) =>
-    invoke<CharacterRuntimePlan>("build_character_runtime_plan", { projectRoot, characterManifestPath })
+    invoke<CharacterRuntimePlan>("build_character_runtime_plan", { projectRoot, characterManifestPath }),
+  selectProceduralAnimation: (input: AnimationSelectionInput) =>
+    invoke<AnimationSelectionResult>("select_procedural_animation", { input }),
+  generateAnimationStateMachine: (animationDatabasePath: string) =>
+    invoke<GeneratedAnimationStateMachine>("generate_animation_state_machine", { animationDatabasePath })
 };

@@ -1393,6 +1393,61 @@ footer button:first-child { margin-right: auto; }
   align-items: center;
   gap: 7px;
 }
+.character-debug {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(5,7,10,.62);
+  border: 1px solid rgba(255,255,255,.08);
+}
+.character-debug header {
+  display: grid;
+  gap: 3px;
+}
+.character-debug header strong {
+  color: #F5F7FA;
+}
+.character-debug header span {
+  color: rgba(255,255,255,.56);
+}
+.character-debug label {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) 70px;
+  align-items: center;
+  gap: 9px;
+  color: rgba(255,255,255,.62);
+}
+.character-debug input[type="range"] {
+  accent-color: #2997FF;
+}
+.character-debug label strong {
+  color: #EAF6FF;
+  text-align: right;
+}
+.character-debug__toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.toggle-pill {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.045);
+  color: rgba(255,255,255,.64);
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.toggle-pill:hover {
+  background: rgba(255,255,255,.075);
+  color: #fff;
+}
+.toggle-pill.is-active {
+  background: rgba(30,123,255,.24);
+  border-color: rgba(41,151,255,.45);
+  color: #EAF6FF;
+}
 .character-metric {
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,.08);

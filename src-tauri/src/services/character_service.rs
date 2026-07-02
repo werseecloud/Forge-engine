@@ -9,10 +9,11 @@ use std::path::{Path, PathBuf};
 use zip::ZipArchive;
 
 use crate::models::character::{
-    AnimationClipRecord, AnimationDatabase, AnimationPackRecord, CharacterAsset,
-    CharacterImportRequest, CharacterImportResult, CharacterRuntimePlan, DefaultCharacterAssets,
-    FootIkSettings, ForgeAutoRig, HumanoidDetectionResult, MovementBlendSettings,
-    PlayerControllerProfile,
+    AnimationClipRecord, AnimationDatabase, AnimationPackRecord, AnimationSelectionInput,
+    AnimationSelectionResult, AnimationStateDefinition, AnimationTransitionDefinition,
+    CharacterAsset, CharacterImportRequest, CharacterImportResult, CharacterRuntimePlan,
+    DefaultCharacterAssets, FootIkSettings, ForgeAutoRig, GeneratedAnimationStateMachine,
+    HumanoidDetectionResult, MovementBlendSettings, PlayerControllerProfile,
 };
 use crate::models::scene::{SceneComponent, SceneObject, Transform, Vec3};
 use crate::services::{log_service, scene_service};
@@ -420,6 +421,127 @@ pub fn build_character_runtime_plan(
     })
 }
 
+pub fn select_procedural_animation(
+    input: AnimationSelectionInput,
+) -> Result<AnimationSelectionResult> {
+    let database: AnimationDatabase =
+        serde_json::from_slice(&fs::read(&input.animation_database_path).with_context(|| {
+            format!(
+                "Could not read animation database {}",
+                input.animation_database_path
+            )
+        })?)?;
+    let speed = horizontal_length(input.velocity.x, input.velocity.z);
+    let acceleration = horizontal_length(input.acceleration.x, input.acceleration.z);
+    let direction = movement_direction(&input);
+    let mut reasons = Vec::new();
+
+    let selected_state = if !input.grounded {
+        reasons.push("Character is airborne.".to_string());
+        if input.velocity.y > 0.3 {
+            "jump".to_string()
+        } else {
+            "fall".to_string()
+        }
+    } else if input.jump_pressed {
+        reasons.push("Jump input is active while grounded.".to_string());
+        "jump".to_string()
+    } else if input.crouching && speed > 0.2 {
+        reasons.push("Crouch input and horizontal movement are active.".to_string());
+        "crouch".to_string()
+    } else if input.crouching {
+        reasons.push("Crouch input is active.".to_string());
+        "crouch".to_string()
+    } else if direction == "left" || direction == "right" {
+        reasons.push(format!("Movement direction is {direction}."));
+        "strafe".to_string()
+    } else if speed < 0.15 {
+        reasons.push("Horizontal speed is below idle threshold.".to_string());
+        "idle".to_string()
+    } else if input.sprinting && speed >= 4.5 {
+        reasons.push("Sprint input is active and speed is high.".to_string());
+        "sprint".to_string()
+    } else if speed >= 2.4 || acceleration >= 3.0 {
+        reasons.push("Speed or acceleration is in run range.".to_string());
+        "run".to_string()
+    } else {
+        reasons.push("Speed is in walk range.".to_string());
+        "walk".to_string()
+    };
+
+    let selected_clip =
+        find_best_clip(&database, &selected_state, &direction).or_else(|| fallback_clip(&database));
+    let mut warnings = Vec::new();
+    if selected_clip.is_none() {
+        warnings.push(format!(
+            "No animation clips are available in {}",
+            input.animation_database_path
+        ));
+    } else if !database.locomotion_sets.contains_key(&selected_state) {
+        warnings.push(format!(
+            "No exact '{selected_state}' clip was found; using fallback clip."
+        ));
+    }
+    let blend_seconds = blend_time(input.last_state.as_deref(), &selected_state);
+
+    Ok(AnimationSelectionResult {
+        selected_state,
+        selected_clip,
+        blend_seconds,
+        speed,
+        direction,
+        reasons,
+        warnings,
+    })
+}
+
+pub fn generate_animation_state_machine(
+    animation_database_path: String,
+) -> Result<GeneratedAnimationStateMachine> {
+    let database: AnimationDatabase =
+        serde_json::from_slice(&fs::read(&animation_database_path).with_context(|| {
+            format!("Could not read animation database {animation_database_path}")
+        })?)?;
+    let required_states = [
+        "idle", "walk", "run", "sprint", "strafe", "jump", "fall", "land", "crouch", "turn",
+        "lean",
+    ];
+    let states = required_states
+        .iter()
+        .map(|state| AnimationStateDefinition {
+            state: (*state).to_string(),
+            clip_ids: database
+                .locomotion_sets
+                .get(*state)
+                .cloned()
+                .unwrap_or_default(),
+        })
+        .collect::<Vec<_>>();
+    let missing_states = states
+        .iter()
+        .filter(|state| state.clip_ids.is_empty())
+        .map(|state| state.state.clone())
+        .collect::<Vec<_>>();
+    let transitions = vec![
+        transition("idle", "walk", "speed > 0.15", 0.18),
+        transition("walk", "run", "speed >= 2.4 or acceleration >= 3.0", 0.22),
+        transition("run", "sprint", "sprinting and speed >= 4.5", 0.28),
+        transition("walk", "strafe", "abs(side_input) > abs(forward_input)", 0.16),
+        transition("run", "jump", "jump_pressed", 0.08),
+        transition("jump", "fall", "vertical_velocity < 0", 0.12),
+        transition("fall", "land", "grounded", 0.1),
+        transition("land", "idle", "speed < 0.15", 0.16),
+        transition("idle", "crouch", "crouching", 0.12),
+        transition("crouch", "walk", "not crouching and speed > 0.15", 0.18),
+    ];
+
+    Ok(GeneratedAnimationStateMachine {
+        states,
+        transitions,
+        missing_states,
+    })
+}
+
 fn make_character_scene_object(
     character: &CharacterAsset,
     database: &AnimationDatabase,
@@ -538,6 +660,104 @@ fn is_locomotion_tag(tag: &str) -> bool {
             | "turn"
             | "lean"
     )
+}
+
+fn find_best_clip(
+    database: &AnimationDatabase,
+    selected_state: &str,
+    direction: &str,
+) -> Option<AnimationClipRecord> {
+    let ids = database.locomotion_sets.get(selected_state)?;
+    let clips = ids
+        .iter()
+        .filter_map(|id| database.clips.iter().find(|clip| &clip.id == id))
+        .collect::<Vec<_>>();
+    let direction_match = clips.iter().find(|clip| {
+        (direction == "left" && clip.tags.iter().any(|tag| tag == "left"))
+            || (direction == "right" && clip.tags.iter().any(|tag| tag == "right"))
+            || (direction == "backward" && clip.tags.iter().any(|tag| tag == "backward"))
+            || (direction == "forward" && clip.tags.iter().any(|tag| tag == "forward"))
+    });
+    direction_match
+        .or_else(|| clips.first())
+        .map(|clip| (*clip).clone())
+}
+
+fn fallback_clip(database: &AnimationDatabase) -> Option<AnimationClipRecord> {
+    for state in ["idle", "walk", "run", "uncategorized"] {
+        if let Some(ids) = database.locomotion_sets.get(state) {
+            if let Some(clip) = ids
+                .iter()
+                .filter_map(|id| database.clips.iter().find(|clip| &clip.id == id))
+                .next()
+            {
+                return Some(clip.clone());
+            }
+        }
+    }
+    database.clips.first().cloned()
+}
+
+fn movement_direction(input: &AnimationSelectionInput) -> String {
+    let speed = horizontal_length(input.velocity.x, input.velocity.z);
+    if speed < 0.15 {
+        return "none".to_string();
+    }
+    let forward = normalize_2d(input.camera_forward.x, input.camera_forward.z).unwrap_or((0.0, -1.0));
+    let right = (forward.1, -forward.0);
+    let velocity = normalize_2d(input.velocity.x, input.velocity.z).unwrap_or((0.0, 0.0));
+    let forward_dot = dot_2d(velocity, forward);
+    let right_dot = dot_2d(velocity, right);
+    if right_dot > 0.55 {
+        "right".to_string()
+    } else if right_dot < -0.55 {
+        "left".to_string()
+    } else if forward_dot < -0.35 {
+        "backward".to_string()
+    } else {
+        "forward".to_string()
+    }
+}
+
+fn blend_time(last_state: Option<&str>, next_state: &str) -> f32 {
+    if last_state == Some(next_state) {
+        0.0
+    } else if next_state == "jump" || next_state == "land" {
+        0.08
+    } else if next_state == "sprint" {
+        0.28
+    } else if next_state == "strafe" {
+        0.16
+    } else {
+        0.18
+    }
+}
+
+fn transition(
+    from: &str,
+    to: &str,
+    condition: &str,
+    blend_seconds: f32,
+) -> AnimationTransitionDefinition {
+    AnimationTransitionDefinition {
+        from: from.to_string(),
+        to: to.to_string(),
+        condition: condition.to_string(),
+        blend_seconds,
+    }
+}
+
+fn horizontal_length(x: f32, z: f32) -> f32 {
+    (x.mul_add(x, z * z)).sqrt()
+}
+
+fn normalize_2d(x: f32, z: f32) -> Option<(f32, f32)> {
+    let length = horizontal_length(x, z);
+    (length > 0.0001).then_some((x / length, z / length))
+}
+
+fn dot_2d(a: (f32, f32), b: (f32, f32)) -> f32 {
+    a.0.mul_add(b.0, a.1 * b.1)
 }
 
 fn classify_animation_tags(path: &str) -> Vec<String> {

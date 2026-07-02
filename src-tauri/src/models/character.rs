@@ -144,3 +144,61 @@ pub struct DefaultCharacterAssets {
     pub animation_pack_paths: Vec<String>,
     pub searched_roots: Vec<String>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AnimationSelectionInput {
+    pub animation_database_path: String,
+    pub velocity: Vec3Input,
+    pub acceleration: Vec3Input,
+    pub grounded: bool,
+    pub jump_pressed: bool,
+    pub crouching: bool,
+    pub sprinting: bool,
+    pub camera_forward: Vec3Input,
+    pub last_state: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Vec3Input {
+    pub x: f32,
+    pub y: f32,
+    pub z: f32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AnimationSelectionResult {
+    pub selected_state: String,
+    pub selected_clip: Option<AnimationClipRecord>,
+    pub blend_seconds: f32,
+    pub speed: f32,
+    pub direction: String,
+    pub reasons: Vec<String>,
+    pub warnings: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GeneratedAnimationStateMachine {
+    pub states: Vec<AnimationStateDefinition>,
+    pub transitions: Vec<AnimationTransitionDefinition>,
+    pub missing_states: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AnimationStateDefinition {
+    pub state: String,
+    pub clip_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AnimationTransitionDefinition {
+    pub from: String,
+    pub to: String,
+    pub condition: String,
+    pub blend_seconds: f32,
+}

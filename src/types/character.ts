@@ -115,3 +115,49 @@ export interface DefaultCharacterAssets {
   animationPackPaths: string[];
   searchedRoots: string[];
 }
+
+export interface AnimationSelectionInput {
+  animationDatabasePath: string;
+  velocity: Vec3Input;
+  acceleration: Vec3Input;
+  grounded: boolean;
+  jumpPressed: boolean;
+  crouching: boolean;
+  sprinting: boolean;
+  cameraForward: Vec3Input;
+  lastState?: string | null;
+}
+
+export interface Vec3Input {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export interface AnimationSelectionResult {
+  selectedState: string;
+  selectedClip: AnimationClipRecord | null;
+  blendSeconds: number;
+  speed: number;
+  direction: string;
+  reasons: string[];
+  warnings: string[];
+}
+
+export interface GeneratedAnimationStateMachine {
+  states: AnimationStateDefinition[];
+  transitions: AnimationTransitionDefinition[];
+  missingStates: string[];
+}
+
+export interface AnimationStateDefinition {
+  state: string;
+  clipIds: string[];
+}
+
+export interface AnimationTransitionDefinition {
+  from: string;
+  to: string;
+  condition: string;
+  blendSeconds: number;
+}

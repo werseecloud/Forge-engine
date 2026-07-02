@@ -106,7 +106,9 @@ pub fn run() {
             commands::character_commands::discover_default_character_assets,
             commands::character_commands::index_animation_packs,
             commands::character_commands::import_character,
-            commands::character_commands::build_character_runtime_plan
+            commands::character_commands::build_character_runtime_plan,
+            commands::character_commands::select_procedural_animation,
+            commands::character_commands::generate_animation_state_machine
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Forge Engine editor");
