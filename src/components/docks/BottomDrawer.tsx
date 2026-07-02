@@ -1,5 +1,6 @@
 import { EmptyState } from "../shared/EmptyState";
 import { BlueprintsPanel } from "../content/BlueprintsPanel";
+import { CharacterAnimationPanel } from "../content/CharacterAnimationPanel";
 import { ConsolePanel } from "../content/ConsolePanel";
 import { ContentBrowser } from "../content/ContentBrowser";
 import { ContentTabs } from "../content/ContentTabs";
@@ -25,6 +26,7 @@ export function BottomDrawer({ onImportStatus, onRefresh, onError, onSuccess }: 
           <ContentBrowser onImportStatus={onImportStatus} onRefresh={onRefresh} onError={onError} onSuccess={onSuccess} />
         ) : null}
         {activeContentTab === "Blueprints" ? <BlueprintsPanel /> : null}
+        {activeContentTab === "Characters" ? <CharacterAnimationPanel onError={onError} onSuccess={onSuccess} /> : null}
         {activeContentTab === "Output Log" ? <OutputLog /> : null}
         {activeContentTab === "Console" ? <ConsolePanel /> : null}
         {activeContentTab === "Animation Timeline" ? <AnimationTimeline /> : null}

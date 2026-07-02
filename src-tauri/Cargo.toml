@@ -30,6 +30,7 @@ winreg = "0.55"
 zip = { version = "2", default-features = false, features = ["deflate"] }
 forge_process = { path = "../crates/forge_process" }
 forge_settings = { path = "../crates/forge_settings" }
+forge_assets = { path = "../crates/forge_assets" }
 forge_rhi = { path = "../crates/forge_rhi", features = ["dx12", "vulkan", "metal"] }
 forge_renderer = { path = "../crates/forge_renderer" }
 forge_editor_bridge = { path = "../crates/forge_editor_bridge" }

@@ -4,6 +4,14 @@ import type { DirectoryNode, WatcherStatus } from "../types/fs";
 import type { CreateProjectRequest, OpenProjectResponse, ProjectSummary, ProjectValidation, AppDirectories } from "../types/project";
 import type { SceneLevel, SceneObject, LevelSummary } from "../types/scene";
 import type { AppSettings } from "../types/settings";
+import type {
+  AnimationDatabase,
+  CharacterImportRequest,
+  CharacterImportResult,
+  CharacterRuntimePlan,
+  DefaultCharacterAssets,
+  HumanoidDetectionResult
+} from "../types/character";
 import type { BlueprintCompileResult, BlueprintGraph, BlueprintGraphSummary, BlueprintRunResult } from "../features/blueprints/types/blueprint-types";
 
 export interface EngineBootStep {
@@ -83,4 +91,15 @@ export const commands = {
     invoke<BlueprintGraph>("duplicate_blueprint_graph", { projectRoot, relativePath, newName }),
   compileBlueprintGraph: (graph: BlueprintGraph) => invoke<BlueprintCompileResult>("compile_blueprint_graph", { graph }),
   runBlueprintPreview: (graph: BlueprintGraph) => invoke<BlueprintRunResult>("run_blueprint_preview", { graph })
+  ,
+  detectHumanoid: (characterSourcePath: string) =>
+    invoke<HumanoidDetectionResult>("detect_humanoid", { characterSourcePath }),
+  discoverDefaultCharacterAssets: () =>
+    invoke<DefaultCharacterAssets>("discover_default_character_assets"),
+  indexAnimationPacks: (animationPackPaths: string[]) =>
+    invoke<AnimationDatabase>("index_animation_packs", { animationPackPaths }),
+  importCharacter: (request: CharacterImportRequest) =>
+    invoke<CharacterImportResult>("import_character", { request }),
+  buildCharacterRuntimePlan: (projectRoot: string, characterManifestPath: string) =>
+    invoke<CharacterRuntimePlan>("build_character_runtime_plan", { projectRoot, characterManifestPath })
 };

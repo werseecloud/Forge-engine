@@ -1,7 +1,7 @@
 import type { ContentTab } from "../../stores/useAppStore";
 import { useAppStore } from "../../stores/useAppStore";
 
-const tabs: ContentTab[] = ["Content Browser", "Blueprints", "Output Log", "Console", "Animation Timeline"];
+const tabs: ContentTab[] = ["Content Browser", "Blueprints", "Characters", "Output Log", "Console", "Animation Timeline"];
 
 export function ContentTabs() {
   const activeContentTab = useAppStore((state) => state.activeContentTab);
@@ -17,4 +17,3 @@ export function ContentTabs() {
     </div>
   );
 }
-

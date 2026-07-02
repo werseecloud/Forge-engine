@@ -7,7 +7,9 @@ import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { chooseSkyboxAsset, loadSkyboxManifest, normalizeSkyboxSettings, type SkyboxManifest } from "../../lib/skybox";
 import { commands } from "../../lib/tauri";
 import { useAppStore } from "../../stores/useAppStore";
+import { useEditorModeStore } from "../../stores/useEditorModeStore";
 import { useProjectStore } from "../../stores/useProjectStore";
+import { useRuntimeStore } from "../../stores/useRuntimeStore";
 import { useSceneStore } from "../../stores/useSceneStore";
 import { useViewportToolStore, type ViewportTool } from "../../stores/useViewportToolStore";
 import { EmptyState } from "../shared/EmptyState";
@@ -32,6 +34,8 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
   const selectedSceneObject = useSceneStore((state) => state.selectedSceneObject);
   const setSelectedSceneObject = useSceneStore((state) => state.setSelectedSceneObject);
   const selectEntity = useAppStore((state) => state.selectEntity);
+  const editorMode = useEditorModeStore((state) => state.mode);
+  const runtimePaused = useRuntimeStore((state) => state.runtimePaused);
   const activeTool = useViewportToolStore((state) => state.activeTool);
   const [viewPreset, setViewPreset] = useState<ViewPreset>("Perspective");
   const [shadingMode, setShadingMode] = useState<ShadingMode>("Lit");
@@ -41,6 +45,8 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
   const activeLevelRef = useRef(activeLevel);
   const selectedSceneObjectRef = useRef(selectedSceneObject);
   const activeToolRef = useRef<ViewportTool>(activeTool);
+  const editorModeRef = useRef(editorMode);
+  const runtimePausedRef = useRef(runtimePaused);
   const viewportOptionsRef = useRef({ shadingMode, showEnvironment, gridVisible });
   const orbitRef = useRef({ yaw: -0.72, pitch: 0.48, distance: 26 });
   const commitTransformRef = useRef<(objectId: string, object3d: THREE.Object3D) => void>(() => {});
@@ -50,8 +56,10 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
     activeLevelRef.current = activeLevel;
     selectedSceneObjectRef.current = selectedSceneObject;
     activeToolRef.current = activeTool;
+    editorModeRef.current = editorMode;
+    runtimePausedRef.current = runtimePaused;
     viewportOptionsRef.current = { shadingMode, showEnvironment, gridVisible };
-  }, [activeLevel, activeTool, currentProject, gridVisible, selectedSceneObject, shadingMode, showEnvironment]);
+  }, [activeLevel, activeTool, currentProject, editorMode, gridVisible, runtimePaused, selectedSceneObject, shadingMode, showEnvironment]);
 
   const changeViewPreset = useCallback((nextPreset: ViewPreset) => {
     setViewPreset(nextPreset);
@@ -183,6 +191,9 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
     let transformDragging = false;
     let orbitDrag: { pointerId: number; x: number; y: number; yaw: number; pitch: number } | null = null;
     let pendingPick: { x: number; y: number; objectId: string | null } | null = null;
+    let lastFrameAt = performance.now();
+    const runtimeKeys = new Set<string>();
+    const runtimeCharacterPositions = new Map<string, THREE.Vector3>();
 
     function resize() {
       const rect = mountElement.getBoundingClientRect();
@@ -387,6 +398,18 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
       event.preventDefault();
     }
 
+    function handleKeyDown(event: KeyboardEvent) {
+      if (editorModeRef.current !== "PlayMode") return;
+      if (["KeyW", "KeyA", "KeyS", "KeyD", "ShiftLeft", "ShiftRight"].includes(event.code)) {
+        runtimeKeys.add(event.code);
+        event.preventDefault();
+      }
+    }
+
+    function handleKeyUp(event: KeyboardEvent) {
+      runtimeKeys.delete(event.code);
+    }
+
     function handleTransformDrag(event: { value: unknown }) {
       const dragging = Boolean(event.value);
       transformDragging = dragging;
@@ -395,10 +418,43 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
       }
     }
 
+    function updateCharacterRuntime(deltaSeconds: number) {
+      if (editorModeRef.current !== "PlayMode") {
+        runtimeCharacterPositions.clear();
+        return;
+      }
+      if (runtimePausedRef.current) return;
+      const level = activeLevelRef.current;
+      const player = level?.objects.find(isPlayableCharacter);
+      if (!player) return;
+      const marker = objectMap.get(player.id);
+      if (!marker) return;
+      const runtimePosition = runtimeCharacterPositions.get(player.id) ?? marker.position.clone();
+      const direction = new THREE.Vector3(
+        (runtimeKeys.has("KeyD") ? 1 : 0) - (runtimeKeys.has("KeyA") ? 1 : 0),
+        0,
+        (runtimeKeys.has("KeyS") ? 1 : 0) - (runtimeKeys.has("KeyW") ? 1 : 0)
+      );
+      if (direction.lengthSq() > 0) {
+        direction.normalize();
+        const sprinting = runtimeKeys.has("ShiftLeft") || runtimeKeys.has("ShiftRight");
+        runtimePosition.addScaledVector(direction, (sprinting ? 8.5 : 4.6) * deltaSeconds);
+        marker.rotation.y = Math.atan2(direction.x, direction.z);
+        marker.rotation.z = THREE.MathUtils.lerp(marker.rotation.z, -direction.x * 0.08, 0.2);
+      } else {
+        marker.rotation.z = THREE.MathUtils.lerp(marker.rotation.z, 0, 0.12);
+      }
+      marker.position.copy(runtimePosition);
+      runtimeCharacterPositions.set(player.id, runtimePosition);
+    }
+
     function animate(now: number) {
+      const deltaSeconds = Math.min(0.05, Math.max(0.001, (now - lastFrameAt) / 1000));
+      lastFrameAt = now;
       resize();
       updateCamera();
       syncSceneObjects();
+      updateCharacterRuntime(deltaSeconds);
       renderer.render(scene, camera);
       frameCount += 1;
       if (now - fpsStarted >= 1000) {
@@ -415,6 +471,8 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
     renderer.domElement.addEventListener("pointercancel", handlePointerUp);
     renderer.domElement.addEventListener("wheel", handleWheel, { passive: true });
     renderer.domElement.addEventListener("contextmenu", handleContextMenu);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
     transformControls.addEventListener("dragging-changed", handleTransformDrag);
 
     frame = requestAnimationFrame(animate);
@@ -426,6 +484,8 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
       renderer.domElement.removeEventListener("pointercancel", handlePointerUp);
       renderer.domElement.removeEventListener("wheel", handleWheel);
       renderer.domElement.removeEventListener("contextmenu", handleContextMenu);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
       transformControls.removeEventListener("dragging-changed", handleTransformDrag);
       transformControls.dispose();
       activeSkyboxTexture?.dispose();
@@ -658,9 +718,20 @@ function createSceneObjectMarker(object: import("../../types/scene").SceneObject
     group.add(glow);
     return group;
   }
-  if (componentTypes.includes("playerstart")) {
+  if (componentTypes.includes("charactercontroller") || componentTypes.includes("animationstatemachine") || componentTypes.includes("playerstart")) {
     const group = new THREE.Group();
-    group.add(new THREE.Mesh(new THREE.CapsuleGeometry(0.32, 0.9, 6, 12), material));
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.34, 1.05, 8, 16), material);
+    body.castShadow = true;
+    group.add(body);
+    if (componentTypes.includes("charactercontroller")) {
+      const facing = new THREE.Mesh(
+        new THREE.ConeGeometry(0.16, 0.42, 10),
+        new THREE.MeshStandardMaterial({ color: 0xf5f7fa, emissive: 0x111827, roughness: 0.38 })
+      );
+      facing.rotateX(Math.PI / 2);
+      facing.position.set(0, 0.25, -0.48);
+      group.add(facing);
+    }
     return group;
   }
   if (primitive.includes("sphere")) {
@@ -681,4 +752,8 @@ function createSceneObjectMarker(object: import("../../types/scene").SceneObject
 
 function isSkyboxObject(object: import("../../types/scene").SceneObject) {
   return object.components.some((component) => component.componentType === "Skybox");
+}
+
+function isPlayableCharacter(object: import("../../types/scene").SceneObject) {
+  return object.visible && object.components.some((component) => component.componentType === "CharacterController");
 }

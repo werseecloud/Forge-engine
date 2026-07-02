@@ -2,7 +2,7 @@ import { create } from "zustand";
 import type { AssetMetadata } from "../types/asset";
 import type { SceneObject } from "../types/scene";
 
-export type ContentTab = "Content Browser" | "Blueprints" | "Output Log" | "Console" | "Animation Timeline";
+export type ContentTab = "Content Browser" | "Blueprints" | "Characters" | "Output Log" | "Console" | "Animation Timeline";
 
 interface AppState {
   appReady: boolean;
@@ -33,4 +33,3 @@ export const useAppStore = create<AppState>((set) => ({
   selectEntity: (selectedEntity) => set({ selectedEntity, selectedAsset: null }),
   selectAsset: (selectedAsset) => set({ selectedAsset, selectedEntity: null })
 }));
-

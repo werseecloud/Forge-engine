@@ -101,7 +101,12 @@ pub fn run() {
             commands::blueprint_commands::delete_blueprint_graph,
             commands::blueprint_commands::duplicate_blueprint_graph,
             commands::blueprint_commands::compile_blueprint_graph,
-            commands::blueprint_commands::run_blueprint_preview
+            commands::blueprint_commands::run_blueprint_preview,
+            commands::character_commands::detect_humanoid,
+            commands::character_commands::discover_default_character_assets,
+            commands::character_commands::index_animation_packs,
+            commands::character_commands::import_character,
+            commands::character_commands::build_character_runtime_plan
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Forge Engine editor");

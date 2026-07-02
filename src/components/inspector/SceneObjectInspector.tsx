@@ -27,6 +27,9 @@ export function SceneObjectInspector({ object, onError }: SceneObjectInspectorPr
   useEffect(() => setDraft(object), [object]);
   const skyboxComponent = draft.components.find((component) => component.componentType === "Skybox");
   const skyboxSettings = skyboxComponent ? normalizeSkyboxSettings(skyboxComponent.data) : null;
+  const characterController = draft.components.find((component) => component.componentType === "CharacterController");
+  const skeletalMesh = draft.components.find((component) => component.componentType === "SkeletalMesh");
+  const animationStateMachine = draft.components.find((component) => component.componentType === "AnimationStateMachine");
 
   async function save() {
     if (!currentProject || !activeLevel) return;
@@ -85,6 +88,34 @@ export function SceneObjectInspector({ object, onError }: SceneObjectInspectorPr
               components: draft.components.map((component) => component.componentType === "Skybox" ? { ...component, data: nextSettings as unknown as Record<string, unknown> } : component)
             })}
           />
+        </InspectorSection>
+      ) : null}
+      {characterController || skeletalMesh || animationStateMachine ? (
+        <InspectorSection title="Character">
+          <div className="detail-grid">
+            {skeletalMesh ? (
+              <>
+                <span>Rig</span><strong>{String(skeletalMesh.data.rig ?? "None")}</strong>
+                <span>Retarget</span><strong>{String(skeletalMesh.data.retargetProfile ?? "None")}</strong>
+                <span>Humanoid</span><strong>{String(skeletalMesh.data.humanoid ?? false)}</strong>
+              </>
+            ) : null}
+            {animationStateMachine ? (
+              <>
+                <span>Animation DB</span><strong>{String(animationStateMachine.data.database ?? "None")}</strong>
+                <span>Clips</span><strong>{String(animationStateMachine.data.clipCount ?? 0)}</strong>
+                <span>Foot IK</span><strong>{String(animationStateMachine.data.footIk ?? false)}</strong>
+              </>
+            ) : null}
+            {characterController ? (
+              <>
+                <span>WASD</span><strong>{String(characterController.data.wasdEnabled ?? false)}</strong>
+                <span>Sprint</span><strong>{String(characterController.data.sprintKey ?? "ShiftLeft")}</strong>
+                <span>Jump</span><strong>{String(characterController.data.jumpKey ?? "Space")}</strong>
+                <span>Crouch</span><strong>{String(characterController.data.crouchKey ?? "ControlLeft")}</strong>
+              </>
+            ) : null}
+          </div>
         </InspectorSection>
       ) : null}
       {draft.transform ? (

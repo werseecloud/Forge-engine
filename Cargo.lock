@@ -1348,6 +1348,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "dirs 5.0.1",
+ "forge_assets",
  "forge_editor_bridge",
  "forge_process",
  "forge_renderer",

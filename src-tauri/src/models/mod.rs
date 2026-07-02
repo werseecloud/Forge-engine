@@ -10,3 +10,4 @@ pub mod health;
 pub mod checks;
 pub mod errors;
 pub mod blueprint;
+pub mod character;

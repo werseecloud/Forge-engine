@@ -1,5 +1,6 @@
 pub mod asset_service;
 pub mod blueprint_service;
+pub mod character_service;
 pub mod fs_service;
 pub mod log_service;
 pub mod project_service;
