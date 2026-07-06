@@ -1,4 +1,4 @@
-import { Box, Camera, Cuboid, Eye, EyeOff, Lightbulb, Layers3, Plus, Search, SlidersHorizontal, Sun, Trash2, UserRoundCheck } from "lucide-react";
+import { Box, Camera, Cuboid, Eye, EyeOff, Globe2, Lightbulb, Layers3, Mountain, Plus, Search, SlidersHorizontal, Sun, Trash2, UserRoundCheck } from "lucide-react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { commands } from "../../lib/tauri";
@@ -12,9 +12,10 @@ import { PillButton } from "../shared/PillButton";
 
 interface WorldOutlinerProps {
   onCreateLevel: () => void;
+  onCreateWorld: () => void;
 }
 
-export function WorldOutliner({ onCreateLevel }: WorldOutlinerProps) {
+export function WorldOutliner({ onCreateLevel, onCreateWorld }: WorldOutlinerProps) {
   const [query, setQuery] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const currentProject = useProjectStore((state) => state.currentProject);
@@ -103,6 +104,10 @@ export function WorldOutliner({ onCreateLevel }: WorldOutlinerProps) {
           <IconButton label="Add scene object" onClick={() => setAddOpen((open) => !open)}><Plus size={15} /></IconButton>
           {addOpen ? (
             <div className="object-add-menu">
+              <button onClick={() => { setAddOpen(false); onCreateWorld(); }}>
+                <Globe2 size={14} />
+                <span>Add World</span>
+              </button>
               {objectMenu.map((item) => (
                 <button key={item.kind} onClick={() => createObject(item.kind)}>
                   {item.icon}
@@ -122,7 +127,40 @@ export function WorldOutliner({ onCreateLevel }: WorldOutlinerProps) {
         {objects.length === 0 ? (
           <div className="inline-empty">No scene objects in this level.</div>
         ) : (
-          objects.map((object) => (
+          objects.map((object) => isWorldObject(object) ? (
+            <div key={object.id} className={selectedSceneObject?.id === object.id ? "world-tree is-selected" : "world-tree"}>
+              <div
+                role="button"
+                tabIndex={0}
+                className="tree-row tree-row--child"
+                onClick={() => {
+                  setSelectedSceneObject(object);
+                  selectEntity(object);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    setSelectedSceneObject(object);
+                    selectEntity(object);
+                  }
+                }}
+              >
+                <Globe2 size={14} />
+                <span>{object.name}</span>
+                <button className="row-icon" aria-label={`Toggle ${object.name} visibility`} onClick={(event) => { event.stopPropagation(); void toggleVisible(object); }}>
+                  {object.visible ? <Eye size={14} /> : <EyeOff size={14} />}
+                </button>
+                <button className="row-icon" aria-label={`Delete ${object.name}`} onClick={(event) => { event.stopPropagation(); void deleteObject(object.id); }}>
+                  <Trash2 size={13} />
+                </button>
+              </div>
+              {worldChildren.map((child) => (
+                <div key={child.label} className="tree-row tree-row--grandchild">
+                  {child.icon}
+                  <span>{child.label}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
             <div
               key={object.id}
               role="button"
@@ -168,6 +206,17 @@ const objectMenu: { kind: ObjectKind; label: string; icon: ReactNode }[] = [
   { kind: "playerStart", label: "Player Start", icon: <UserRoundCheck size={14} /> }
 ];
 
+const worldChildren: { label: string; icon: ReactNode }[] = [
+  { label: "Terrain", icon: <Mountain size={13} /> },
+  { label: "Rocks", icon: <Box size={13} /> },
+  { label: "Grass", icon: <Layers3 size={13} /> },
+  { label: "Foliage", icon: <Layers3 size={13} /> },
+  { label: "Water", icon: <Layers3 size={13} /> },
+  { label: "Lighting", icon: <Sun size={13} /> },
+  { label: "Sky", icon: <Globe2 size={13} /> },
+  { label: "World Settings", icon: <SlidersHorizontal size={13} /> }
+];
+
 const objectSpecs: Record<ObjectKind, { name: string; y: number; tags: string[]; assetReference: string | null; components: () => SceneComponent[] }> = {
   cube: { name: "Cube", y: 0.5, tags: ["primitive", "mesh"], assetReference: "primitive:cube", components: () => [{ componentType: "StaticMesh", data: { primitive: "cube" } }] },
   sphere: { name: "Sphere", y: 0.5, tags: ["primitive", "mesh"], assetReference: "primitive:sphere", components: () => [{ componentType: "StaticMesh", data: { primitive: "sphere" } }] },
@@ -178,3 +227,7 @@ const objectSpecs: Record<ObjectKind, { name: string; y: number; tags: string[];
   spotLight: { name: "Spot Light", y: 3, tags: ["light"], assetReference: null, components: () => [{ componentType: "SpotLight", data: { intensity: 10, angle: 35, color: "#ffffff" } }] },
   playerStart: { name: "Player Start", y: 1, tags: ["player_start"], assetReference: null, components: () => [{ componentType: "PlayerStart", data: { enabled: true } }] }
 };
+
+function isWorldObject(object: SceneObject) {
+  return object.components.some((component) => component.componentType === "WorldComponent");
+}

@@ -1,4 +1,4 @@
-import { Box, FolderOpen, Plus } from "lucide-react";
+import { Box, FolderOpen, Globe2, Plus } from "lucide-react";
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import type { DragEvent } from "react";
 import * as THREE from "three";
@@ -23,10 +23,11 @@ interface CenterViewportProps {
   onCreateProject: () => void;
   onOpenProject: () => void;
   onCreateLevel: () => void;
+  onCreateWorld: () => void;
   onError: (message: string) => void;
 }
 
-export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, onCreateLevel, onError }: CenterViewportProps) {
+export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, onCreateLevel, onCreateWorld, onError }: CenterViewportProps) {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const currentProject = useProjectStore((state) => state.currentProject);
   const activeLevel = useSceneStore((state) => state.activeLevel);
@@ -49,6 +50,7 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
   const runtimePausedRef = useRef(runtimePaused);
   const viewportOptionsRef = useRef({ shadingMode, showEnvironment, gridVisible });
   const orbitRef = useRef({ yaw: -0.72, pitch: 0.48, distance: 26 });
+  const orbitTargetRef = useRef(new THREE.Vector3(0, 3, 0));
   const commitTransformRef = useRef<(objectId: string, object3d: THREE.Object3D) => void>(() => {});
 
   useEffect(() => {
@@ -193,6 +195,7 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
     let pendingPick: { x: number; y: number; objectId: string | null } | null = null;
     let lastFrameAt = performance.now();
     const runtimeKeys = new Set<string>();
+    const editViewportKeys = new Set<string>();
     const runtimeCharacterPositions = new Map<string, THREE.Vector3>();
 
     function resize() {
@@ -203,12 +206,12 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
     }
 
     function updateCamera() {
-      const target = new THREE.Vector3(0, 3, 0);
+      const target = orbitTargetRef.current;
       const orbit = orbitRef.current;
       const x = Math.sin(orbit.yaw) * Math.cos(orbit.pitch) * orbit.distance;
       const y = Math.sin(orbit.pitch) * orbit.distance + 5;
       const z = Math.cos(orbit.yaw) * Math.cos(orbit.pitch) * orbit.distance;
-      camera.position.set(x, y, z);
+      camera.position.set(target.x + x, target.y + y, target.z + z);
       camera.lookAt(target);
     }
 
@@ -399,15 +402,20 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
     }
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (editorModeRef.current !== "PlayMode") return;
-      if (["KeyW", "KeyA", "KeyS", "KeyD", "ShiftLeft", "ShiftRight"].includes(event.code)) {
+      if (isTextInputEvent(event)) return;
+      const movementKeys = ["KeyW", "KeyA", "KeyS", "KeyD", "ShiftLeft", "ShiftRight", "KeyQ", "KeyE"];
+      if (!movementKeys.includes(event.code)) return;
+      if (editorModeRef.current === "PlayMode") {
         runtimeKeys.add(event.code);
-        event.preventDefault();
+      } else {
+        editViewportKeys.add(event.code);
       }
+      event.preventDefault();
     }
 
     function handleKeyUp(event: KeyboardEvent) {
       runtimeKeys.delete(event.code);
+      editViewportKeys.delete(event.code);
     }
 
     function handleTransformDrag(event: { value: unknown }) {
@@ -448,10 +456,31 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
       runtimeCharacterPositions.set(player.id, runtimePosition);
     }
 
+    function updateEditorPreviewNavigation(deltaSeconds: number) {
+      if (editorModeRef.current === "PlayMode" || transformDragging) {
+        editViewportKeys.clear();
+        return;
+      }
+      const forwardAmount = (editViewportKeys.has("KeyW") ? 1 : 0) - (editViewportKeys.has("KeyS") ? 1 : 0);
+      const rightAmount = (editViewportKeys.has("KeyD") ? 1 : 0) - (editViewportKeys.has("KeyA") ? 1 : 0);
+      const verticalAmount = (editViewportKeys.has("KeyE") ? 1 : 0) - (editViewportKeys.has("KeyQ") ? 1 : 0);
+      if (forwardAmount === 0 && rightAmount === 0 && verticalAmount === 0) return;
+      const orbit = orbitRef.current;
+      const forward = new THREE.Vector3(Math.sin(orbit.yaw), 0, Math.cos(orbit.yaw)).normalize();
+      const right = new THREE.Vector3(forward.z, 0, -forward.x).normalize();
+      const speed = (editViewportKeys.has("ShiftLeft") || editViewportKeys.has("ShiftRight") ? 22 : 9) * deltaSeconds;
+      orbitTargetRef.current
+        .addScaledVector(forward, forwardAmount * speed)
+        .addScaledVector(right, rightAmount * speed);
+      orbitTargetRef.current.y += verticalAmount * speed;
+      setViewPreset("Perspective");
+    }
+
     function animate(now: number) {
       const deltaSeconds = Math.min(0.05, Math.max(0.001, (now - lastFrameAt) / 1000));
       lastFrameAt = now;
       resize();
+      updateEditorPreviewNavigation(deltaSeconds);
       updateCamera();
       syncSceneObjects();
       updateCharacterRuntime(deltaSeconds);
@@ -559,6 +588,14 @@ export function CenterViewport({ fps, setFps, onCreateProject, onOpenProject, on
             title="No level loaded"
             detail="Create a level to start placing imported assets in the 3D environment."
             actions={<PillButton active onClick={onCreateLevel} icon={<Box size={15} />}>Create Level</PillButton>}
+          />
+        </div>
+      ) : activeLevel.objects.filter((object) => !isSkyboxObject(object)).length === 0 ? (
+        <div className="viewport-empty viewport-empty--compact">
+          <EmptyState
+            title="Empty scene"
+            detail="Create a generated Forge world or add objects from the Hierarchy."
+            actions={<PillButton active onClick={onCreateWorld} icon={<Globe2 size={15} />}>Create World</PillButton>}
           />
         </div>
       ) : null}
@@ -711,6 +748,43 @@ function createSceneObjectMarker(object: import("../../types/scene").SceneObject
     group.add(lens);
     return group;
   }
+  if (componentTypes.includes("worldcomponent")) {
+    const group = new THREE.Group();
+    const terrainComponent = object.components.find((component) => component.componentType === "TerrainComponent");
+    const worldComponent = object.components.find((component) => component.componentType === "WorldComponent");
+    const mapSize = Number(worldComponent?.data.mapSize ?? 1024);
+    const terrainSize = Math.min(96, Math.max(18, mapSize / 32));
+    const terrain = new THREE.Mesh(
+      new THREE.PlaneGeometry(terrainSize, terrainSize, 48, 48),
+      new THREE.MeshStandardMaterial({
+        color: 0x536b45,
+        roughness: 0.86,
+        metalness: 0.02,
+        transparent: true,
+        opacity: 0.86
+      })
+    );
+    const positions = terrain.geometry.attributes.position as THREE.BufferAttribute;
+    const mountainHeight = Number(terrainComponent?.data.mountainHeight ?? 300);
+    for (let index = 0; index < positions.count; index += 1) {
+      const x = positions.getX(index);
+      const y = positions.getY(index);
+      const height = Math.sin(x * 0.19) * Math.cos(y * 0.17) * Math.min(6, mountainHeight / 120);
+      positions.setZ(index, height);
+    }
+    terrain.geometry.computeVertexNormals();
+    terrain.rotateX(-Math.PI / 2);
+    terrain.receiveShadow = true;
+    group.add(terrain);
+    const water = new THREE.Mesh(
+      new THREE.PlaneGeometry(terrainSize * 0.92, terrainSize * 0.92),
+      new THREE.MeshStandardMaterial({ color: 0x1e7bff, transparent: true, opacity: 0.22, roughness: 0.08 })
+    );
+    water.rotateX(-Math.PI / 2);
+    water.position.y = 0.08;
+    group.add(water);
+    return group;
+  }
   if (componentTypes.some((type) => type.includes("light"))) {
     const group = new THREE.Group();
     group.add(new THREE.Mesh(new THREE.SphereGeometry(0.38, 24, 16), material));
@@ -756,4 +830,11 @@ function isSkyboxObject(object: import("../../types/scene").SceneObject) {
 
 function isPlayableCharacter(object: import("../../types/scene").SceneObject) {
   return object.visible && object.components.some((component) => component.componentType === "CharacterController");
+}
+
+function isTextInputEvent(event: KeyboardEvent) {
+  const target = event.target as HTMLElement | null;
+  if (!target) return false;
+  const tag = target.tagName.toLowerCase();
+  return tag === "input" || tag === "textarea" || tag === "select" || target.isContentEditable;
 }

@@ -20,6 +20,7 @@ import { CreateLevelModal } from "../modals/CreateLevelModal";
 import { CreateProjectModal } from "../modals/CreateProjectModal";
 import { SettingsModal } from "../modals/SettingsModal";
 import { GraphicsSettingsModal } from "../GraphicsSettingsModal";
+import { CreateWorldModal } from "../world/CreateWorldModal";
 import { StatusBar } from "./StatusBar";
 import { TopToolbar } from "./TopToolbar";
 import { WindowsTitleBar } from "./WindowsTitleBar";
@@ -29,6 +30,7 @@ import { BlueprintsPage } from "../../features/blueprints/BlueprintsPage";
 export function AppShell() {
   const [createProjectOpen, setCreateProjectOpen] = useState(false);
   const [createLevelOpen, setCreateLevelOpen] = useState(false);
+  const [createWorldOpen, setCreateWorldOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [graphicsSettingsOpen, setGraphicsSettingsOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -182,9 +184,9 @@ export function AppShell() {
             onNotify={toast}
           />
           <main className="editor-grid">
-            <LeftDock onCreateLevel={() => setCreateLevelOpen(true)} />
+            <LeftDock onCreateLevel={() => setCreateLevelOpen(true)} onCreateWorld={() => setCreateWorldOpen(true)} />
             <div className="center-stack">
-              <CenterViewport fps={fps} setFps={setFps} onCreateProject={() => setCreateProjectOpen(true)} onOpenProject={openProject} onCreateLevel={() => setCreateLevelOpen(true)} onError={(message) => toast("error", message)} />
+              <CenterViewport fps={fps} setFps={setFps} onCreateProject={() => setCreateProjectOpen(true)} onOpenProject={openProject} onCreateLevel={() => setCreateLevelOpen(true)} onCreateWorld={() => setCreateWorldOpen(true)} onError={(message) => toast("error", message)} />
               <BottomDrawer
                 onImportStatus={setLastImportStatus}
                 onError={(message) => toast("error", message)}
@@ -213,6 +215,16 @@ export function AppShell() {
         projectRoot={projectRoot}
         onClose={() => setCreateLevelOpen(false)}
         onCreated={onLevelCreated}
+        onError={(message) => toast("error", message)}
+      />
+      <CreateWorldModal
+        open={createWorldOpen}
+        onClose={() => setCreateWorldOpen(false)}
+        onCreated={(result) => {
+          setActiveLevel(result.level);
+          void refreshProjectData();
+          result.warnings.length > 0 ? toast("warning", result.warnings.join("\n")) : toast("success", `World '${result.world.name}' generated.`);
+        }}
         onError={(message) => toast("error", message)}
       />
       <SettingsModal

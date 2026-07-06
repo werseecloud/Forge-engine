@@ -790,6 +790,46 @@ footer button:first-child { margin-right: auto; }
   box-shadow: 0 24px 90px rgba(0,0,0,.52);
 }
 .modal--wide { width: min(980px, calc(100vw - 32px)); }
+.world-modal { width: min(1120px, calc(100vw - 28px)); }
+.world-modal__body {
+  min-height: 0;
+  max-height: min(720px, calc(100vh - 170px));
+  overflow: auto;
+  display: grid;
+  gap: 12px;
+  padding: 14px 4px 14px 0;
+}
+.world-modal__section {
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.032);
+  padding: 12px;
+}
+.world-modal__section h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: #F5F7FA;
+}
+.world-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.world-grid .span-2 { grid-column: span 2; }
+.world-preview-note {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: rgba(30,123,255,.1);
+  color: #B7E3FF;
+  border: 1px solid rgba(41,151,255,.22);
+}
+.world-slot-button {
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
 .graphics-modal {
   width: min(1040px, calc(100vw - 32px));
 }
@@ -1004,6 +1044,23 @@ footer button:first-child { margin-right: auto; }
 .object-add-menu button:hover {
   background: rgba(30,123,255,.16);
   color: #fff;
+}
+.world-tree {
+  display: grid;
+  gap: 2px;
+}
+.world-tree.is-selected > .tree-row {
+  background: rgba(30,123,255,.16);
+  border-color: rgba(41,151,255,.38);
+}
+.tree-row--grandchild {
+  margin-left: 18px;
+  min-height: 24px;
+  font-size: 12px;
+  opacity: .78;
+}
+.tree-row--grandchild svg {
+  color: rgba(41,151,255,.8);
 }
 .tree-row .row-icon {
   width: 24px;

@@ -4,6 +4,7 @@ import type { DirectoryNode, WatcherStatus } from "../types/fs";
 import type { CreateProjectRequest, OpenProjectResponse, ProjectSummary, ProjectValidation, AppDirectories } from "../types/project";
 import type { SceneLevel, SceneObject, LevelSummary } from "../types/scene";
 import type { AppSettings } from "../types/settings";
+import type { CreateWorldRequest, CreateWorldResult } from "../types/world";
 import type {
   AnimationDatabase,
   AnimationSelectionInput,
@@ -108,5 +109,7 @@ export const commands = {
   selectProceduralAnimation: (input: AnimationSelectionInput) =>
     invoke<AnimationSelectionResult>("select_procedural_animation", { input }),
   generateAnimationStateMachine: (animationDatabasePath: string) =>
-    invoke<GeneratedAnimationStateMachine>("generate_animation_state_machine", { animationDatabasePath })
+    invoke<GeneratedAnimationStateMachine>("generate_animation_state_machine", { animationDatabasePath }),
+
+  createWorld: (request: CreateWorldRequest) => invoke<CreateWorldResult>("create_world", { request })
 };

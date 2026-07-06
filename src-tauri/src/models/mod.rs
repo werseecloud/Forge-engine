@@ -11,3 +11,4 @@ pub mod checks;
 pub mod errors;
 pub mod blueprint;
 pub mod character;
+pub mod world;

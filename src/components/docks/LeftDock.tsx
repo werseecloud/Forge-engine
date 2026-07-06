@@ -5,9 +5,10 @@ import { WorldOutliner } from "../outliner/WorldOutliner";
 
 interface LeftDockProps {
   onCreateLevel: () => void;
+  onCreateWorld: () => void;
 }
 
-export function LeftDock({ onCreateLevel }: LeftDockProps) {
+export function LeftDock({ onCreateLevel, onCreateWorld }: LeftDockProps) {
   const [tab, setTab] = useState<"outliner" | "levels">("outliner");
 
   return (
@@ -17,7 +18,7 @@ export function LeftDock({ onCreateLevel }: LeftDockProps) {
         <button className={tab === "levels" ? "is-active" : ""} onClick={() => setTab("levels")}>Levels</button>
       </div>
       <div className="dock-body">
-        {tab === "outliner" ? <WorldOutliner onCreateLevel={onCreateLevel} /> : <LevelsPanel onCreateLevel={onCreateLevel} />}
+        {tab === "outliner" ? <WorldOutliner onCreateLevel={onCreateLevel} onCreateWorld={onCreateWorld} /> : <LevelsPanel onCreateLevel={onCreateLevel} />}
       </div>
       <div className="dock-lower">
         <WorldLayersPanel />
@@ -25,4 +26,3 @@ export function LeftDock({ onCreateLevel }: LeftDockProps) {
     </aside>
   );
 }
-

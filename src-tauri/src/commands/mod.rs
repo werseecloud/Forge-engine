@@ -20,3 +20,4 @@ pub mod renderer_commands;
 pub mod skybox_commands;
 pub mod blueprint_commands;
 pub mod character_commands;
+pub mod world_commands;

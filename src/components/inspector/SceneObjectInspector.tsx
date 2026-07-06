@@ -30,6 +30,11 @@ export function SceneObjectInspector({ object, onError }: SceneObjectInspectorPr
   const characterController = draft.components.find((component) => component.componentType === "CharacterController");
   const skeletalMesh = draft.components.find((component) => component.componentType === "SkeletalMesh");
   const animationStateMachine = draft.components.find((component) => component.componentType === "AnimationStateMachine");
+  const worldComponent = draft.components.find((component) => component.componentType === "WorldComponent");
+  const terrainComponent = draft.components.find((component) => component.componentType === "TerrainComponent");
+  const terrainMaterialComponent = draft.components.find((component) => component.componentType === "TerrainMaterialComponent");
+  const worldScatterComponent = draft.components.find((component) => component.componentType === "WorldScatterComponent");
+  const worldPerformanceComponent = draft.components.find((component) => component.componentType === "WorldPerformanceComponent");
 
   async function save() {
     if (!currentProject || !activeLevel) return;
@@ -113,6 +118,42 @@ export function SceneObjectInspector({ object, onError }: SceneObjectInspectorPr
                 <span>Sprint</span><strong>{String(characterController.data.sprintKey ?? "ShiftLeft")}</strong>
                 <span>Jump</span><strong>{String(characterController.data.jumpKey ?? "Space")}</strong>
                 <span>Crouch</span><strong>{String(characterController.data.crouchKey ?? "ControlLeft")}</strong>
+              </>
+            ) : null}
+          </div>
+        </InspectorSection>
+      ) : null}
+      {worldComponent ? (
+        <InspectorSection title="World">
+          <div className="detail-grid">
+            <span>Name</span><strong>{String(worldComponent.data.name ?? draft.name)}</strong>
+            <span>Seed</span><strong>{String(worldComponent.data.seed ?? "None")}</strong>
+            <span>Map Size</span><strong>{String(worldComponent.data.mapSize ?? "Unknown")}m</strong>
+            <span>World File</span><strong>{String(worldComponent.data.worldFile ?? "None")}</strong>
+            {terrainComponent ? (
+              <>
+                <span>Resolution</span><strong>{String(terrainComponent.data.resolution ?? "Unknown")}</strong>
+                <span>Max Height</span><strong>{String(terrainComponent.data.maxHeight ?? "Unknown")}</strong>
+                <span>Mountain Height</span><strong>{String(terrainComponent.data.mountainHeight ?? "Unknown")}</strong>
+                <span>Chunks</span><strong>{String(terrainComponent.data.chunkCount ?? "Unknown")}</strong>
+              </>
+            ) : null}
+            {terrainMaterialComponent ? (
+              <>
+                <span>Material Preset</span><strong>{String(terrainMaterialComponent.data.preset ?? "Fallback")}</strong>
+                <span>PBR</span><strong>{String(terrainMaterialComponent.data.usePbr ?? false)}</strong>
+              </>
+            ) : null}
+            {worldPerformanceComponent ? (
+              <>
+                <span>Texture Quality</span><strong>{String(worldPerformanceComponent.data.textureQuality ?? "Auto")}</strong>
+                <span>Terrain LOD</span><strong>{String(worldPerformanceComponent.data.terrainLod ?? "Auto")}</strong>
+                <span>Streaming</span><strong>{String(worldPerformanceComponent.data.streaming ?? false)}</strong>
+              </>
+            ) : null}
+            {worldScatterComponent ? (
+              <>
+                <span>Scatter</span><strong>{Array.isArray(worldScatterComponent.data.layers) ? `${worldScatterComponent.data.layers.length} layers` : "None"}</strong>
               </>
             ) : null}
           </div>

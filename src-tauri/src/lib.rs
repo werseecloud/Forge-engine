@@ -108,7 +108,8 @@ pub fn run() {
             commands::character_commands::import_character,
             commands::character_commands::build_character_runtime_plan,
             commands::character_commands::select_procedural_animation,
-            commands::character_commands::generate_animation_state_machine
+            commands::character_commands::generate_animation_state_machine,
+            commands::world_commands::create_world
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Forge Engine editor");
