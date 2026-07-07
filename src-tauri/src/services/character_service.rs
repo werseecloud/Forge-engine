@@ -847,8 +847,18 @@ fn read_glb_json(path: &Path) -> Result<String> {
     if bytes.len() < 20 || &bytes[0..4] != b"glTF" {
         return Err(anyhow!("Invalid GLB header: {}", path.display()));
     }
-    let chunk_length = u32::from_le_bytes(bytes[12..16].try_into().unwrap()) as usize;
-    let chunk_type = u32::from_le_bytes(bytes[16..20].try_into().unwrap());
+    let chunk_length_bytes: [u8; 4] = bytes
+        .get(12..16)
+        .ok_or_else(|| anyhow!("GLB JSON chunk length is missing: {}", path.display()))?
+        .try_into()
+        .map_err(|_| anyhow!("Invalid GLB JSON chunk length: {}", path.display()))?;
+    let chunk_type_bytes: [u8; 4] = bytes
+        .get(16..20)
+        .ok_or_else(|| anyhow!("GLB JSON chunk type is missing: {}", path.display()))?
+        .try_into()
+        .map_err(|_| anyhow!("Invalid GLB JSON chunk type: {}", path.display()))?;
+    let chunk_length = u32::from_le_bytes(chunk_length_bytes) as usize;
+    let chunk_type = u32::from_le_bytes(chunk_type_bytes);
     if chunk_type != 0x4E4F534A {
         return Err(anyhow!("First GLB chunk is not JSON: {}", path.display()));
     }
