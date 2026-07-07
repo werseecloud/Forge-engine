@@ -9,6 +9,7 @@ export interface CreateWorldRequest {
 export interface CreateWorldResult {
   world: ForgeWorldFile;
   level: SceneLevel;
+  assetManifest: WorldAssetManifest;
   generatedFiles: string[];
   warnings: string[];
 }
@@ -115,6 +116,7 @@ export interface ForgeWorldFile {
   performanceMode: QualityMode;
   materials: WorldMaterialLayer[];
   scatterLayers: ScatterLayerMetadata[];
+  assets: WorldAssetManifest;
   terrain: TerrainOutputMetadata;
   createdWith: string;
 }
@@ -135,4 +137,35 @@ export interface ScatterLayerMetadata {
   instanceCount: number;
   density: number;
   distanceCulling: number;
+  sourceAsset: string | null;
+  sourceArchive: string | null;
+}
+
+export interface WorldAssetManifest {
+  materials: WorldMaterialAsset[];
+  props: WorldPropAsset[];
+  searchedRoots: string[];
+}
+
+export interface WorldMaterialAsset {
+  id: string;
+  displayName: string;
+  archivePath: string;
+  sizeBytes: number;
+  albedo: string | null;
+  normal: string | null;
+  roughness: string | null;
+  metallic: string | null;
+  ao: string | null;
+  height: string | null;
+  mask: string | null;
+}
+
+export interface WorldPropAsset {
+  id: string;
+  displayName: string;
+  path: string;
+  archivePath: string | null;
+  category: string;
+  sizeBytes: number;
 }

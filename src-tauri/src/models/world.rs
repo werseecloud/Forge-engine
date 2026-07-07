@@ -14,6 +14,7 @@ pub struct CreateWorldRequest {
 pub struct CreateWorldResult {
     pub world: ForgeWorldFile,
     pub level: SceneLevel,
+    pub asset_manifest: WorldAssetManifest,
     pub generated_files: Vec<String>,
     pub warnings: Vec<String>,
 }
@@ -164,6 +165,7 @@ pub struct ForgeWorldFile {
     pub performance_mode: QualityMode,
     pub materials: Vec<WorldMaterialLayer>,
     pub scatter_layers: Vec<ScatterLayerMetadata>,
+    pub assets: WorldAssetManifest,
     pub terrain: TerrainOutputMetadata,
     pub created_with: String,
 }
@@ -188,5 +190,41 @@ pub struct ScatterLayerMetadata {
     pub instance_count: u32,
     pub density: f32,
     pub distance_culling: f32,
+    pub source_asset: Option<String>,
+    pub source_archive: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorldAssetManifest {
+    pub materials: Vec<WorldMaterialAsset>,
+    pub props: Vec<WorldPropAsset>,
+    pub searched_roots: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorldMaterialAsset {
+    pub id: String,
+    pub display_name: String,
+    pub archive_path: String,
+    pub size_bytes: u64,
+    pub albedo: Option<String>,
+    pub normal: Option<String>,
+    pub roughness: Option<String>,
+    pub metallic: Option<String>,
+    pub ao: Option<String>,
+    pub height: Option<String>,
+    pub mask: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorldPropAsset {
+    pub id: String,
+    pub display_name: String,
+    pub path: String,
+    pub archive_path: Option<String>,
+    pub category: String,
+    pub size_bytes: u64,
+}

@@ -1,10 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Mountain, Save, Upload, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { formatBytes } from "../../lib/formatBytes";
 import { commands } from "../../lib/tauri";
 import { useProjectStore } from "../../stores/useProjectStore";
 import { useSceneStore } from "../../stores/useSceneStore";
-import type { CreateWorldResult, MapSize, QualityMode, WorldConfig, WorldType } from "../../types/world";
+import type { CreateWorldResult, MapSize, QualityMode, WorldAssetManifest, WorldConfig, WorldType } from "../../types/world";
 import { CustomSelect } from "../shared/CustomSelect";
 import { PillButton } from "../shared/PillButton";
 
@@ -24,6 +25,8 @@ export function CreateWorldModal({ open, onClose, onCreated, onError }: CreateWo
   const currentProject = useProjectStore((state) => state.currentProject);
   const activeLevel = useSceneStore((state) => state.activeLevel);
   const [busy, setBusy] = useState(false);
+  const [assetManifest, setAssetManifest] = useState<WorldAssetManifest | null>(null);
+  const [assetError, setAssetError] = useState<string | null>(null);
   const [config, setConfig] = useState<WorldConfig>(() => defaultWorldConfig());
   const resolvedMapSize = useMemo(() => {
     if (config.mapSize === "Small") return 512;
@@ -32,6 +35,25 @@ export function CreateWorldModal({ open, onClose, onCreated, onError }: CreateWo
     if (config.mapSize === "Huge") return 4096;
     return config.customMapSize ?? 1024;
   }, [config.customMapSize, config.mapSize]);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setAssetError(null);
+    commands.discoverWorldAssets()
+      .then((manifest) => {
+        if (!cancelled) setAssetManifest(manifest);
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setAssetManifest(null);
+          setAssetError(String(error));
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   async function generateWorld() {
     if (!currentProject || !activeLevel) {
@@ -116,6 +138,21 @@ export function CreateWorldModal({ open, onClose, onCreated, onError }: CreateWo
                   <ToggleField label="Auto optimize textures" checked={config.textures.autoOptimizeTextures} onChange={(autoOptimizeTextures) => setConfig({ ...config, textures: { ...config.textures, autoOptimizeTextures } })} />
                 </div>
                 <button className="secondary-button world-slot-button" disabled><Upload size={15} /> Custom PBR texture slots are stored in the config; file import is next.</button>
+                <div className="world-asset-status">
+                  <div>
+                    <strong>Packaged world assets</strong>
+                    <span>{assetError ? assetError : `${assetManifest?.materials.length ?? 0} material packs, ${assetManifest?.props.length ?? 0} prop packs found`}</span>
+                  </div>
+                  <div className="world-asset-list">
+                    {(assetManifest?.materials ?? []).map((asset) => (
+                      <span key={asset.id}>{asset.displayName} · {formatBytes(asset.sizeBytes)}</span>
+                    ))}
+                    {(assetManifest?.props ?? []).map((asset) => (
+                      <span key={asset.id}>{asset.displayName} · {formatBytes(asset.sizeBytes)}</span>
+                    ))}
+                    {!assetManifest && !assetError ? <span>Scanning local engine content...</span> : null}
+                  </div>
+                </div>
               </section>
 
               <section className="world-modal__section">

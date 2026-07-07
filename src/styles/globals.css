@@ -911,6 +911,40 @@ footer button:first-child { margin-right: auto; }
   align-items: center;
   gap: 7px;
 }
+.world-asset-status {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(41,151,255,.2);
+  background: rgba(30,123,255,.07);
+}
+.world-asset-status strong {
+  display: block;
+  font-size: 12px;
+  color: #F5F7FA;
+}
+.world-asset-status span {
+  color: rgba(255,255,255,.66);
+}
+.world-asset-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 6px;
+  max-height: 92px;
+  overflow: auto;
+}
+.world-asset-list span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(0,0,0,.24);
+  border: 1px solid rgba(255,255,255,.06);
+  color: rgba(255,255,255,.72);
+}
 .graphics-modal {
   width: min(1040px, calc(100vw - 32px));
 }

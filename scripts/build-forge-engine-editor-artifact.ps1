@@ -38,6 +38,13 @@ try {
   Copy-Item -LiteralPath $targetExe -Destination $artifactExe -Force
   & $embedScript -ExePath $artifactExe
 
+  $worldAssetsSource = Join-Path $root "engine\WorldAssets"
+  $worldAssetsDest = Join-Path $root "artifacts\windows\WorldAssets"
+  if (Test-Path -LiteralPath $worldAssetsSource) {
+    New-Item -ItemType Directory -Force -Path $worldAssetsDest | Out-Null
+    Copy-Item -Path (Join-Path $worldAssetsSource "*") -Destination $worldAssetsDest -Recurse -Force
+  }
+
   if ($Unsigned) {
     Write-Warning "Built unsigned ForgeEngine.exe. SmartScreen will still warn until a Wersee Developers certificate is used."
   } else {
