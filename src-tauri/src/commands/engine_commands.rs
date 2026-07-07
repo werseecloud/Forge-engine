@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::process::Command;
+use std::thread;
 use tauri::{AppHandle, Emitter};
 
 use crate::services::log_service;
@@ -60,7 +61,7 @@ fn start_services(app: &AppHandle) -> anyhow::Result<Vec<EngineBootStep>> {
         "forge_asset_worker.exe",
         "forge_build_worker.exe",
     ];
-    let mut steps = Vec::new();
+    let mut handles = Vec::new();
     for component in components {
         emit_status(
             app,
@@ -76,26 +77,40 @@ fn start_services(app: &AppHandle) -> anyhow::Result<Vec<EngineBootStep>> {
                 stderr: "Component executable was not found on disk.".to_string(),
             };
             log_service::append_output_log(&format!("Engine boot missing {}", component)).ok();
-            let _ = app.emit("engine_boot_step_completed", &step);
-            steps.push(step);
+            handles.push(thread::spawn(move || step));
             continue;
         };
-        let output = Command::new(&path).arg("--health-check").output()?;
-        let status = if output.status.success() {
-            "ok"
-        } else {
-            "failed"
-        };
-        let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
-        log_service::append_output_log(&format!("Engine boot {}: {}", component, status)).ok();
-        let step = EngineBootStep {
-            component: component.to_string(),
-            command: format!("{} --health-check", path.display()),
-            status: status.to_string(),
-            stdout,
-            stderr,
-        };
+        let component = component.to_string();
+        handles.push(thread::spawn(move || match Command::new(&path).arg("--health-check").output() {
+            Ok(output) => {
+                let status = if output.status.success() { "ok" } else { "failed" };
+                EngineBootStep {
+                    component,
+                    command: format!("{} --health-check", path.display()),
+                    status: status.to_string(),
+                    stdout: String::from_utf8_lossy(&output.stdout).trim().to_string(),
+                    stderr: String::from_utf8_lossy(&output.stderr).trim().to_string(),
+                }
+            }
+            Err(error) => EngineBootStep {
+                component,
+                command: format!("{} --health-check", path.display()),
+                status: "failed".to_string(),
+                stdout: String::new(),
+                stderr: error.to_string(),
+            },
+        }));
+    }
+    let mut steps = Vec::new();
+    for handle in handles {
+        let step = handle.join().unwrap_or_else(|_| EngineBootStep {
+            component: "unknown".to_string(),
+            command: "worker health check".to_string(),
+            status: "failed".to_string(),
+            stdout: String::new(),
+            stderr: "Worker health check thread panicked.".to_string(),
+        });
+        log_service::append_output_log(&format!("Engine boot {}: {}", step.component, step.status)).ok();
         let _ = app.emit("engine_boot_step_completed", &step);
         steps.push(step);
     }

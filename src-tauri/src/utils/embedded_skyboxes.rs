@@ -1,6 +1,5 @@
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use std::fs;
 use std::io::{Cursor, Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
@@ -47,6 +46,18 @@ pub fn ensure_embedded_skyboxes_installed() -> Result<SkyboxManifest> {
     fs::create_dir_all(&skybox_dir)?;
 
     let pack = load_skybox_pack()?;
+    let fingerprint = fast_fingerprint(&pack);
+    let fingerprint_path = skybox_dir.join(".skybox_pack.fingerprint");
+    let manifest_path = skybox_dir.join("manifest.json");
+    if fs::read_to_string(&fingerprint_path)
+        .map(|value| value == fingerprint)
+        .unwrap_or(false)
+        && manifest_path.exists()
+    {
+        if let Ok(manifest) = read_installed_manifest(&skybox_dir, &manifest_path) {
+            return Ok(manifest);
+        }
+    }
     let mut archive = ZipArchive::new(Cursor::new(pack))?;
     let mut packed_manifest = None;
     for index in 0..archive.len() {
@@ -90,6 +101,32 @@ pub fn ensure_embedded_skyboxes_installed() -> Result<SkyboxManifest> {
         return Err(anyhow!("No embedded skyboxes were included in the Forge Engine executable."));
     }
 
+    fs::write(fingerprint_path, fingerprint)?;
+    Ok(SkyboxManifest { skyboxes: assets })
+}
+
+fn read_installed_manifest(skybox_dir: &Path, manifest_path: &Path) -> Result<SkyboxManifest> {
+    let manifest: PackedSkyboxManifest = serde_json::from_slice(&fs::read(manifest_path)?)?;
+    let assets = manifest
+        .skyboxes
+        .into_iter()
+        .map(|asset| {
+            let file_name = Path::new(&asset.path)
+                .file_name()
+                .ok_or_else(|| anyhow!("Invalid installed skybox path: {}", asset.path))?;
+            Ok(SkyboxAsset {
+                id: asset.id,
+                label: asset.label,
+                resolution: asset.resolution,
+                path: skybox_dir.join(file_name).to_string_lossy().to_string(),
+                min_device_memory_gb: asset.min_device_memory_gb,
+                max_texture_size: asset.max_texture_size,
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
+    if assets.is_empty() {
+        return Err(anyhow!("Installed skybox manifest is empty"));
+    }
     Ok(SkyboxManifest { skyboxes: assets })
 }
 
@@ -148,18 +185,42 @@ fn skybox_dir() -> Result<PathBuf> {
 }
 
 fn write_if_changed(destination: &Path, bytes: &[u8]) -> Result<()> {
+    let fingerprint = fast_fingerprint(bytes);
+    let fingerprint_path = destination.with_extension(format!(
+        "{}.fingerprint",
+        destination
+            .extension()
+            .and_then(|extension| extension.to_str())
+            .unwrap_or("asset")
+    ));
     if destination.exists() {
-        let existing = fs::read(destination)?;
-        if sha256(&existing) == sha256(bytes) {
+        let same_len = destination
+            .metadata()
+            .map(|metadata| metadata.len() == bytes.len() as u64)
+            .unwrap_or(false);
+        let same_fingerprint = fs::read_to_string(&fingerprint_path)
+            .map(|value| value == fingerprint)
+            .unwrap_or(false);
+        if same_len && same_fingerprint {
             return Ok(());
         }
     }
     fs::write(destination, bytes)?;
+    fs::write(fingerprint_path, fingerprint)?;
     Ok(())
 }
 
-fn sha256(bytes: &[u8]) -> Vec<u8> {
-    let mut hasher = Sha256::new();
-    hasher.update(bytes);
-    hasher.finalize().to_vec()
+fn fast_fingerprint(bytes: &[u8]) -> String {
+    let head_len = bytes.len().min(4096);
+    let tail_len = bytes.len().saturating_sub(head_len).min(4096);
+    let mut hash = 1469598103934665603u64;
+    for byte in &bytes[..head_len] {
+        hash ^= *byte as u64;
+        hash = hash.wrapping_mul(1099511628211);
+    }
+    for byte in &bytes[bytes.len().saturating_sub(tail_len)..] {
+        hash ^= *byte as u64;
+        hash = hash.wrapping_mul(1099511628211);
+    }
+    format!("{}:{hash:016x}", bytes.len())
 }

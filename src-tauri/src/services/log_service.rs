@@ -1,8 +1,11 @@
 use anyhow::Result;
 use chrono::Utc;
 use std::fs::{self, OpenOptions};
-use std::io::Write;
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::Path;
+
+const MAX_LOG_BYTES_TO_READ: u64 = 256 * 1024;
+const MAX_LOG_LINES_TO_RETURN: usize = 1000;
 
 use crate::utils::paths::ensure_app_directories;
 
@@ -30,8 +33,23 @@ pub fn read_output_log() -> Result<Vec<String>> {
     if !Path::new(&path).exists() {
         return Ok(Vec::new());
     }
-    let content = fs::read_to_string(path)?;
-    Ok(content.lines().map(ToString::to_string).collect())
+    let mut file = fs::File::open(path)?;
+    let len = file.metadata()?.len();
+    let start = len.saturating_sub(MAX_LOG_BYTES_TO_READ);
+    file.seek(SeekFrom::Start(start))?;
+    let mut content = String::new();
+    file.read_to_string(&mut content)?;
+    let mut lines = content
+        .lines()
+        .map(ToString::to_string)
+        .collect::<Vec<_>>();
+    if start > 0 && !lines.is_empty() {
+        lines.remove(0);
+    }
+    if lines.len() > MAX_LOG_LINES_TO_RETURN {
+        lines = lines[lines.len() - MAX_LOG_LINES_TO_RETURN..].to_vec();
+    }
+    Ok(lines)
 }
 
 pub fn clear_output_log() -> Result<()> {

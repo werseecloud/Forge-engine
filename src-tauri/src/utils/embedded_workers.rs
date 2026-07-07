@@ -1,5 +1,4 @@
 use anyhow::{anyhow, Result};
-use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -123,18 +122,43 @@ fn find_development_worker(worker: &str) -> Option<PathBuf> {
 }
 
 fn write_if_changed(destination: &Path, bytes: &[u8]) -> Result<()> {
+    let fingerprint = fast_fingerprint(bytes);
+    let fingerprint_path = destination.with_extension(format!(
+        "{}.fingerprint",
+        destination
+            .extension()
+            .and_then(|extension| extension.to_str())
+            .unwrap_or("bin")
+    ));
     if destination.exists() {
-        let existing = fs::read(destination)?;
-        if sha256(&existing) == sha256(bytes) {
+        let expected_len = bytes.len() as u64;
+        let same_len = destination
+            .metadata()
+            .map(|metadata| metadata.len() == expected_len)
+            .unwrap_or(false);
+        let same_fingerprint = fs::read_to_string(&fingerprint_path)
+            .map(|value| value == fingerprint)
+            .unwrap_or(false);
+        if same_len && same_fingerprint {
             return Ok(());
         }
     }
     fs::write(destination, bytes)?;
+    fs::write(fingerprint_path, fingerprint)?;
     Ok(())
 }
 
-fn sha256(bytes: &[u8]) -> Vec<u8> {
-    let mut hasher = Sha256::new();
-    hasher.update(bytes);
-    hasher.finalize().to_vec()
+fn fast_fingerprint(bytes: &[u8]) -> String {
+    let head_len = bytes.len().min(4096);
+    let tail_len = bytes.len().saturating_sub(head_len).min(4096);
+    let mut hash = 1469598103934665603u64;
+    for byte in &bytes[..head_len] {
+        hash ^= *byte as u64;
+        hash = hash.wrapping_mul(1099511628211);
+    }
+    for byte in &bytes[bytes.len().saturating_sub(tail_len)..] {
+        hash ^= *byte as u64;
+        hash = hash.wrapping_mul(1099511628211);
+    }
+    format!("{}:{hash:016x}", bytes.len())
 }
