@@ -973,6 +973,13 @@ footer button:first-child { margin-right: auto; }
   font-size: 13px;
   color: #F5F7FA;
 }
+.graphics-section__note {
+  margin: -2px 0 10px;
+  max-height: 58px;
+  overflow: auto;
+  color: rgba(255,255,255,.62);
+  line-height: 1.45;
+}
 .graphics-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -997,6 +1004,9 @@ footer button:first-child { margin-right: auto; }
   border-radius: 9px;
   background: rgba(5,7,10,.58);
 }
+.renderer-stats-panel .renderer-stats-panel__wide {
+  grid-column: span 2;
+}
 .renderer-stats-panel span,
 .field-stack span {
   color: rgba(255,255,255,.58);
@@ -1007,6 +1017,12 @@ footer button:first-child { margin-right: auto; }
   text-overflow: ellipsis;
   white-space: nowrap;
   color: #F5F7FA;
+}
+.renderer-stats-panel__wide strong {
+  white-space: normal;
+  line-height: 1.35;
+  max-height: 44px;
+  overflow: auto;
 }
 .field-stack {
   display: grid;

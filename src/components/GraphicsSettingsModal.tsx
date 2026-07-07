@@ -92,6 +92,9 @@ export function GraphicsSettingsModal({ open, onClose, onSaved, onError }: Graph
                 </section>
                 <section className="graphics-section">
                   <h3>Ray Tracing</h3>
+                  <p className="graphics-section__note">
+                    {capabilities?.rayTracingSupport.reason ?? "Detecting ray tracing support..."}
+                  </p>
                   <div className="toggle-grid">
                     <Toggle label="RT shadows" disabled={!capabilities?.supportsRayTracing} checked={settings.rayTracedShadows} onChange={(rayTracedShadows) => setSettings({ ...settings, rayTracedShadows })} />
                     <Toggle label="RT reflections" disabled={!capabilities?.supportsRayTracing} checked={settings.rayTracedReflections} onChange={(rayTracedReflections) => setSettings({ ...settings, rayTracedReflections })} />
@@ -101,6 +104,11 @@ export function GraphicsSettingsModal({ open, onClose, onSaved, onError }: Graph
                 </section>
                 <section className="graphics-section">
                   <h3>Path Tracing</h3>
+                  <p className="graphics-section__note">
+                    {capabilities?.rayTracingSupport.computeBvhFallbackAvailable
+                      ? "Compute BVH fallback is available for progressive path tracing experiments."
+                      : "Path tracing needs compute shader support before it can run."}
+                  </p>
                   <div className="graphics-grid">
                     <NumberField label="Samples per pixel" min={1} max={4096} value={settings.pathTracing.samplesPerPixel} onChange={(samplesPerPixel) => setSettings({ ...settings, pathTracing: { ...settings.pathTracing, samplesPerPixel } })} />
                     <NumberField label="Max bounces" min={1} max={32} value={settings.pathTracing.maxBounces} onChange={(maxBounces) => setSettings({ ...settings, pathTracing: { ...settings.pathTracing, maxBounces } })} />

@@ -55,6 +55,7 @@ export interface BackendCapabilities {
   supportsRayTracing: boolean;
   supportsRayQueries: boolean;
   supportsRayTracingPipeline: boolean;
+  rayTracingSupport: RayTracingSupport;
   supportsVariableRateShading: boolean;
   supportsSamplerFeedback: boolean;
   supportsTextureCompressionBc: boolean;
@@ -71,6 +72,21 @@ export interface BackendCapabilities {
   adapterName: string;
   vendorId: number | null;
   deviceId: number | null;
+}
+
+export type RayTracingTier =
+  | "unsupported"
+  | "computeBvhFallback"
+  | "hardwareRayQueries"
+  | "hardwareRayTracingPipeline";
+
+export interface RayTracingSupport {
+  tier: RayTracingTier;
+  reason: string;
+  dxrAvailable: boolean;
+  vulkanRtAvailable: boolean;
+  metalRtAvailable: boolean;
+  computeBvhFallbackAvailable: boolean;
 }
 
 export interface GpuStats {

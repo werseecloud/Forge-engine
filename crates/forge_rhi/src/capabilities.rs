@@ -1,3 +1,4 @@
+use forge_raytracing::RayTracingSupport;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -11,6 +12,8 @@ pub struct BackendCapabilities {
     pub supports_ray_tracing: bool,
     pub supports_ray_queries: bool,
     pub supports_ray_tracing_pipeline: bool,
+    #[serde(default)]
+    pub ray_tracing_support: RayTracingSupport,
     pub supports_variable_rate_shading: bool,
     pub supports_sampler_feedback: bool,
     pub supports_texture_compression_bc: bool,
@@ -40,6 +43,9 @@ impl BackendCapabilities {
             supports_ray_tracing: false,
             supports_ray_queries: false,
             supports_ray_tracing_pipeline: false,
+            ray_tracing_support: RayTracingSupport::unsupported(
+                "No GPU adapter or RHI ray tracing backend is available.",
+            ),
             supports_variable_rate_shading: false,
             supports_sampler_feedback: false,
             supports_texture_compression_bc: false,

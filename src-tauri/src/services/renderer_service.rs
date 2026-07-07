@@ -1,8 +1,12 @@
 use anyhow::Result;
-use forge_renderer::{GpuStats, GraphicsSettings, RendererFeatureMatrix, RendererPath};
+use forge_raytracing::PathTracingAccumulation;
+use forge_renderer::{GpuStats, GraphicsSettings, RendererFeatureMatrix};
 use forge_rhi::BackendCapabilities;
+use std::sync::{Mutex, OnceLock};
 
 use crate::services::{log_service, settings_service};
+
+static PATH_TRACING_ACCUMULATION: OnceLock<Mutex<PathTracingAccumulation>> = OnceLock::new();
 
 pub fn get_backend_capabilities() -> Result<BackendCapabilities> {
     let info = forge_rhi::DeviceFactory::detect_default_blocking()?;
@@ -16,14 +20,14 @@ pub fn get_renderer_settings() -> Result<GraphicsSettings> {
 pub fn update_renderer_settings(mut settings: GraphicsSettings) -> Result<GraphicsSettings> {
     let capabilities =
         get_backend_capabilities().unwrap_or_else(|_| BackendCapabilities::conservative_software());
-    if !capabilities.supports_ray_tracing {
-        settings.ray_traced_shadows = false;
-        settings.ray_traced_reflections = false;
-        settings.ray_traced_ao = false;
-        settings.ray_traced_gi = false;
-        if matches!(settings.renderer_path, RendererPath::HybridRayTracing) {
-            settings.renderer_path = RendererPath::Deferred;
-        }
+    let requested_path = settings.renderer_path;
+    settings = settings.sanitized_for_capabilities(&capabilities);
+    if requested_path != settings.renderer_path {
+        log_service::append_output_log(&format!(
+            "Renderer path {:?} is unsupported on this backend; using {:?}. Reason: {}",
+            requested_path, settings.renderer_path, capabilities.ray_tracing_support.reason
+        ))
+        .ok();
     }
 
     let mut app_settings = settings_service::load_settings()?;
@@ -40,7 +44,14 @@ pub fn update_renderer_settings(mut settings: GraphicsSettings) -> Result<Graphi
 pub fn get_gpu_stats() -> Result<GpuStats> {
     let capabilities =
         get_backend_capabilities().unwrap_or_else(|_| BackendCapabilities::conservative_software());
+    let accumulation = PATH_TRACING_ACCUMULATION
+        .get_or_init(|| Mutex::new(PathTracingAccumulation::default()))
+        .lock()
+        .ok()
+        .map(|state| state.clone())
+        .unwrap_or_default();
     Ok(GpuStats {
+        frame_index: accumulation.frame_index,
         backend_name: capabilities.backend_name,
         adapter_name: Some(capabilities.adapter_name),
         ..GpuStats::default()
@@ -54,6 +65,11 @@ pub fn get_renderer_feature_matrix() -> Result<RendererFeatureMatrix> {
 }
 
 pub fn reset_path_tracing_accumulation() -> Result<String> {
-    log_service::append_output_log("Path tracing accumulation reset requested").ok();
-    Ok("Path tracing accumulation reset requested".to_string())
+    let accumulation =
+        PATH_TRACING_ACCUMULATION.get_or_init(|| Mutex::new(PathTracingAccumulation::default()));
+    if let Ok(mut state) = accumulation.lock() {
+        state.reset();
+    }
+    log_service::append_output_log("Path tracing accumulation reset").ok();
+    Ok("Path tracing accumulation reset".to_string())
 }

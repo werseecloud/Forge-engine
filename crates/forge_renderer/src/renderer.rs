@@ -48,12 +48,31 @@ impl RendererFeatureMatrix {
     pub fn from_capabilities(capabilities: &BackendCapabilities) -> Self {
         Self {
             deferred_gbuffer: FeatureStatus::Partial,
-            clustered_forward_plus: if capabilities.supports_compute { FeatureStatus::Partial } else { FeatureStatus::Unsupported },
+            clustered_forward_plus: if capabilities.supports_compute {
+                FeatureStatus::Partial
+            } else {
+                FeatureStatus::Unsupported
+            },
             ssao: FeatureStatus::Planned,
             ssr: FeatureStatus::Planned,
-            progressive_path_tracing: if capabilities.supports_compute { FeatureStatus::Partial } else { FeatureStatus::Unsupported },
-            compute_bvh_fallback: if capabilities.supports_compute { FeatureStatus::Planned } else { FeatureStatus::Unsupported },
-            hardware_ray_tracing_abstraction: if capabilities.supports_ray_tracing { FeatureStatus::Partial } else { FeatureStatus::Unsupported },
+            progressive_path_tracing: if capabilities.supports_compute {
+                FeatureStatus::Partial
+            } else {
+                FeatureStatus::Unsupported
+            },
+            compute_bvh_fallback: if capabilities
+                .ray_tracing_support
+                .compute_bvh_fallback_available
+            {
+                FeatureStatus::Partial
+            } else {
+                FeatureStatus::Unsupported
+            },
+            hardware_ray_tracing_abstraction: if capabilities.supports_ray_tracing {
+                FeatureStatus::Partial
+            } else {
+                FeatureStatus::Planned
+            },
             mobile_vulkan_metal_demo: FeatureStatus::Planned,
             browser_webgpu_demo: FeatureStatus::Planned,
         }
@@ -108,6 +127,46 @@ impl Default for GraphicsSettings {
     }
 }
 
+impl GraphicsSettings {
+    pub fn sanitized_for_capabilities(mut self, capabilities: &BackendCapabilities) -> Self {
+        self.path_tracing = self.path_tracing.sanitized();
+        self.resolution_scale = self.resolution_scale.clamp(0.25, 1.5);
+        self.texture_budget_mb = self.texture_budget_mb.clamp(256, 65536);
+        self.max_lights = self
+            .max_lights
+            .clamp(1, capabilities.max_lights_per_cluster.max(1) * 32);
+        self.frame_limiter = self.frame_limiter.map(|value| value.clamp(15, 1000));
+
+        if !capabilities.supports_ray_tracing {
+            self.ray_traced_shadows = false;
+            self.ray_traced_reflections = false;
+            self.ray_traced_ao = false;
+            self.ray_traced_gi = false;
+            if matches!(self.renderer_path, RendererPath::HybridRayTracing) {
+                self.renderer_path = RendererPath::Deferred;
+            }
+            if self.reflection_quality == "RayTraced" {
+                self.reflection_quality = "ScreenSpace".to_string();
+            }
+            if self.gi_mode == "Hardware RT Planned" {
+                self.gi_mode = "Probes".to_string();
+            }
+        }
+
+        if matches!(self.renderer_path, RendererPath::PathTracing) && !capabilities.supports_compute
+        {
+            self.renderer_path = RendererPath::ForwardPlus;
+        }
+
+        if !capabilities.supports_compute {
+            self.dynamic_resolution = false;
+            self.max_lights = self.max_lights.min(64);
+        }
+
+        self
+    }
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GpuStats {
@@ -147,15 +206,7 @@ impl ForgeRenderer {
     }
 
     pub fn set_settings(&mut self, mut settings: GraphicsSettings) {
-        if !self.capabilities.supports_ray_tracing {
-            settings.ray_traced_shadows = false;
-            settings.ray_traced_reflections = false;
-            settings.ray_traced_ao = false;
-            settings.ray_traced_gi = false;
-            if matches!(settings.renderer_path, RendererPath::HybridRayTracing) {
-                settings.renderer_path = RendererPath::Deferred;
-            }
-        }
+        settings = settings.sanitized_for_capabilities(&self.capabilities);
         self.settings = settings;
     }
 

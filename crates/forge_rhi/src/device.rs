@@ -1,4 +1,5 @@
 use crate::{BackendApi, BackendCapabilities, BackendPreference};
+use forge_raytracing::RayTracingSupport;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -62,19 +63,31 @@ impl DeviceFactory {
         let features = adapter.features();
         let limits = adapter.limits();
         let backend = BackendApi::from(info.backend);
+        let supports_compute = true;
+        let ray_tracing_support = detect_ray_tracing_support(info.backend, supports_compute);
+        let supports_ray_queries = matches!(
+            ray_tracing_support.tier,
+            forge_raytracing::RayTracingTier::HardwareRayQueries
+                | forge_raytracing::RayTracingTier::HardwareRayTracingPipeline
+        );
+        let supports_ray_tracing_pipeline = matches!(
+            ray_tracing_support.tier,
+            forge_raytracing::RayTracingTier::HardwareRayTracingPipeline
+        );
 
         Ok(RhiDeviceInfo {
             backend,
             capabilities: BackendCapabilities {
-                supports_compute: true,
+                supports_compute,
                 supports_timestamp_queries: features.contains(wgpu::Features::TIMESTAMP_QUERY),
                 supports_pipeline_cache: false,
                 supports_bindless_resources: features.contains(wgpu::Features::TEXTURE_BINDING_ARRAY)
                     || features.contains(wgpu::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING),
                 supports_mesh_shaders: false,
-                supports_ray_tracing: false,
-                supports_ray_queries: false,
-                supports_ray_tracing_pipeline: false,
+                supports_ray_tracing: supports_ray_queries || supports_ray_tracing_pipeline,
+                supports_ray_queries,
+                supports_ray_tracing_pipeline,
+                ray_tracing_support,
                 supports_variable_rate_shading: false,
                 supports_sampler_feedback: false,
                 supports_texture_compression_bc: features.contains(wgpu::Features::TEXTURE_COMPRESSION_BC),
@@ -94,6 +107,28 @@ impl DeviceFactory {
             },
         })
     }
+}
+
+#[cfg(feature = "webgpu")]
+fn detect_ray_tracing_support(backend: wgpu::Backend, supports_compute: bool) -> RayTracingSupport {
+    let backend_name = format!("{backend:?}");
+    let native_backend_can_eventually_support_rt = matches!(
+        backend,
+        wgpu::Backend::Dx12 | wgpu::Backend::Vulkan | wgpu::Backend::Metal
+    );
+    if native_backend_can_eventually_support_rt {
+        if supports_compute {
+            return RayTracingSupport::compute_fallback(format!(
+                "{backend_name} adapter detected. Current Forge wgpu RHI does not expose native DXR/Vulkan RT/Metal RT yet; compute BVH fallback is available for path tracing experiments."
+            ));
+        }
+        return RayTracingSupport::unsupported(format!(
+            "{backend_name} adapter detected, but compute shaders are unavailable so no ray tracing fallback can run."
+        ));
+    }
+    RayTracingSupport::unsupported(format!(
+        "{backend_name} backend does not expose native hardware ray tracing in this Forge build."
+    ))
 }
 
 #[cfg(feature = "webgpu")]

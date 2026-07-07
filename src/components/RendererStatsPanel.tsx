@@ -18,7 +18,11 @@ export function RendererStatsPanel({ capabilities, stats }: RendererStatsPanelPr
       </div>
       <div>
         <span>Hardware RT</span>
-        <strong>{capabilities?.supportsRayTracing ? "Available" : "Unavailable"}</strong>
+        <strong>{capabilities?.supportsRayTracing ? "Available" : capabilities?.rayTracingSupport.computeBvhFallbackAvailable ? "Compute fallback" : "Unavailable"}</strong>
+      </div>
+      <div className="renderer-stats-panel__wide">
+        <span>RT path</span>
+        <strong>{capabilities?.rayTracingSupport.reason ?? "Detecting ray tracing support"}</strong>
       </div>
       <div>
         <span>GPU timings</span>

@@ -1351,6 +1351,7 @@ dependencies = [
  "forge_assets",
  "forge_editor_bridge",
  "forge_process",
+ "forge_raytracing",
  "forge_renderer",
  "forge_rhi",
  "forge_settings",
@@ -1464,6 +1465,7 @@ dependencies = [
 name = "forge_rhi"
 version = "1.0.0"
 dependencies = [
+ "forge_raytracing",
  "pollster",
  "serde",
  "thiserror 1.0.69",

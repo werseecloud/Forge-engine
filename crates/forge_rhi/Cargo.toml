@@ -16,6 +16,7 @@ editor = []
 mobile = []
 
 [dependencies]
+forge_raytracing = { path = "../forge_raytracing" }
 serde = { version = "1", features = ["derive"] }
 thiserror = "1"
 tracing = "0.1"
