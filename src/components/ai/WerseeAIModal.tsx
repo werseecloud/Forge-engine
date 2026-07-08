@@ -22,6 +22,7 @@ export function WerseeAIModal({ open, onClose, onError, onSuccess }: WerseeAIMod
   const currentProject = useProjectStore((state) => state.currentProject);
   const activeLevel = useSceneStore((state) => state.activeLevel);
   const selectedSceneObject = useSceneStore((state) => state.selectedSceneObject);
+  const setActiveLevel = useSceneStore((state) => state.setActiveLevel);
   const [tab, setTab] = useState<AiTab>("setup");
   const [report, setReport] = useState<AiCompatibilityReport | null>(null);
   const [models, setModels] = useState<InstalledModel[]>([]);
@@ -83,7 +84,11 @@ export function WerseeAIModal({ open, onClose, onError, onSuccess }: WerseeAIMod
   async function loadModel(modelId: string) {
     try {
       const handle = await commands.aiLoadModel(modelId);
-      if (!handle.loaded) onError("Model is installed, but no native inference backend is linked in this build yet.");
+      if (handle.loaded) {
+        onSuccess(`Local AI runtime ready: ${handle.backend}`);
+      } else {
+        onError("Model is installed, but Forge local AI runner is missing. Put forge_ai_runner.exe or llama-cli.exe in AI/Runtime.");
+      }
     } catch (error) {
       onError(String(error));
     }
@@ -93,7 +98,7 @@ export function WerseeAIModal({ open, onClose, onError, onSuccess }: WerseeAIMod
     const built = await commands.aiBuildContext({
       projectRoot: currentProject?.rootPath ?? null,
       selectedEntityJson: selectedSceneObject ? JSON.stringify(selectedSceneObject) : null,
-      activeLevelJson: activeLevel ? JSON.stringify({ name: activeLevel.name, objects: activeLevel.objects.length, layers: activeLevel.layers.length }) : null,
+      activeLevelJson: activeLevel ? JSON.stringify(activeLevel) : null,
       activeFilePath: null,
       diagnostics: [],
       userIntent: userPrompt
@@ -129,8 +134,13 @@ export function WerseeAIModal({ open, onClose, onError, onSuccess }: WerseeAIMod
 
   async function applyAction(action: AiProposedAction) {
     try {
-      await commands.aiApplyAction(action.actionId);
-      onSuccess("Action is ready for host apply flow. Confirmation is required before mutation.");
+      const applied = await commands.aiApplyAction(action.actionId);
+      if (currentProject && activeLevel && applied.levelPath && ["update_scene_object", "create_scene_object"].includes(applied.operation)) {
+        const refreshed = await commands.openLevel(currentProject.rootPath, applied.levelPath);
+        setActiveLevel(refreshed);
+      }
+      setActions((items) => items.map((item) => item.actionId === applied.actionId ? applied : item));
+      onSuccess(applied.result ?? `Applied ${applied.title}.`);
     } catch (error) {
       onError(String(error));
     }
@@ -241,9 +251,11 @@ function Actions({ actions, onApply, onReject }: { actions: AiProposedAction[]; 
         <article className="wersee-ai-action" key={action.actionId}>
           <strong>{action.title}</strong>
           <span>{action.description}</span>
-          <small>{action.target} · risk {action.risk}</small>
+          <small>{action.operation} - {action.target} - risk {action.risk}</small>
+          {action.after ? <code>{action.after}</code> : null}
+          {action.applied ? <em>{action.result ?? "Applied"}</em> : null}
           <div className="wersee-ai-row">
-            <PillButton active onClick={() => onApply(action)}>Apply</PillButton>
+            <PillButton active disabled={action.applied} onClick={() => onApply(action)}>{action.applied ? "Applied" : "Apply"}</PillButton>
             <PillButton onClick={() => onReject(action.actionId)}>Reject</PillButton>
           </div>
         </article>

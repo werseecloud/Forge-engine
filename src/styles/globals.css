@@ -1108,6 +1108,20 @@ footer button:first-child { margin-right: auto; }
 .wersee-ai-action small {
   color: rgba(255,255,255,.62);
 }
+.wersee-ai-action code,
+.wersee-ai-action em {
+  display: block;
+  max-height: 92px;
+  overflow: auto;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(0,0,0,.28);
+  color: rgba(255,255,255,.78);
+  padding: 7px 8px;
+  font-style: normal;
+  font-size: 12px;
+  line-height: 1.35;
+}
 .wersee-ai-model-list small {
   overflow: hidden;
   text-overflow: ellipsis;

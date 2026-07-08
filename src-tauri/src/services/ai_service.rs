@@ -1,10 +1,14 @@
+use crate::models::scene::{SceneComponent, SceneObject, Transform, Vec3};
+use crate::services::{blueprint_service, scene_service};
+use crate::utils::ids::new_id;
+use crate::utils::paths::{ensure_within, normalize_relative_path};
 use anyhow::{anyhow, Result};
 use forge_ai::{
     compatibility::assess, context::build_context, hardware_probe::probe_hardware,
-    runtime::RuntimeManager, AiCompatibilityReport, AiContext, AiContextRequest,
+    runtime::RuntimeManager, AiCompatibilityReport, AiContext, AiContextRequest, AiError,
     AiGenerationResult, AiPermissionSet, AiPrompt, AiProposedAction, AiToolDescriptor,
     AiToolRouter, GenerateOptions, InstalledModel, LocalAiRuntime, ModelRegistry, ModelStatus,
-    RuntimeModelHandle,
+    PermissionMode, RuntimeModelHandle,
 };
 use std::collections::HashMap;
 use std::fs;
@@ -52,7 +56,7 @@ pub fn load_model(model_id: String) -> Result<RuntimeModelHandle> {
         .lock()
         .map_err(|_| anyhow!("AI runtime lock failed"))?;
     let handle = runtime.load_model(model)?;
-    append_log("Model load requested. Inference backend is metadata-only in this build.").ok();
+    append_log(&format!("Model load requested: {}", handle.backend)).ok();
     Ok(handle)
 }
 
@@ -86,6 +90,9 @@ pub fn generate(prompt: AiPrompt, options: GenerateOptions) -> Result<AiGenerati
         .get_or_init(|| Mutex::new(RuntimeManager::default()))
         .lock()
         .map_err(|_| anyhow!("AI runtime lock failed"))?;
+    if let Ok(model) = registry().active_model() {
+        runtime.load_model(model).ok();
+    }
     Ok(runtime.generate(prompt, options)?)
 }
 
@@ -121,10 +128,23 @@ pub fn preview_action(action_id: String) -> Result<AiProposedAction> {
 
 pub fn apply_action(action_id: String) -> Result<AiProposedAction> {
     let permissions = get_permissions()?;
-    if permissions.require_confirmation {
-        append_log(&format!("Action {action_id} requires user confirmation and was returned for host application apply flow.")).ok();
-    }
-    preview_action(action_id)
+    let mut store = ACTIONS
+        .get_or_init(|| Mutex::new(HashMap::new()))
+        .lock()
+        .map_err(|_| anyhow!("AI action lock failed"))?;
+    let action = store
+        .get(&action_id)
+        .cloned()
+        .ok_or_else(|| anyhow!("AI action was not found: {action_id}"))?;
+    let mut applied = apply_action_mutation(action, &permissions)?;
+    applied.applied = true;
+    store.insert(action_id.clone(), applied.clone());
+    append_log(&format!(
+        "AI action applied: {} ({})",
+        applied.title, applied.operation
+    ))
+    .ok();
+    Ok(applied)
 }
 
 pub fn reject_action(action_id: String) -> Result<()> {
@@ -252,4 +272,198 @@ fn append_log(message: &str) -> Result<()> {
     let previous = fs::read_to_string(&path).unwrap_or_default();
     fs::write(path, format!("{previous}{line}"))?;
     Ok(())
+}
+
+fn apply_action_mutation(
+    mut action: AiProposedAction,
+    permissions: &AiPermissionSet,
+) -> Result<AiProposedAction> {
+    match action.operation.as_str() {
+        "read_only" => {
+            action.applied = false;
+            action.result =
+                Some("Read-only action previewed. No project files were changed.".to_string());
+            Ok(action)
+        }
+        "update_scene_object" => {
+            ensure_permission(
+                permissions,
+                permissions.allow_edit_scene,
+                "editing scene objects",
+            )?;
+            let project_root = required_project_root(&action)?;
+            let level_path = required_level_path(&action)?;
+            let object_value = action
+                .payload
+                .get("object")
+                .cloned()
+                .ok_or_else(|| anyhow!("AI scene action is missing object payload"))?;
+            let object: SceneObject = serde_json::from_value(object_value)?;
+            let saved = scene_service::update_scene_object(project_root, level_path, object)?;
+            action.result = Some(serde_json::to_string(&saved)?);
+            Ok(action)
+        }
+        "create_scene_object" => {
+            ensure_permission(
+                permissions,
+                permissions.allow_edit_scene,
+                "creating scene objects",
+            )?;
+            let project_root = required_project_root(&action)?;
+            let level_path = required_level_path(&action)?;
+            let mut level = scene_service::open_level(project_root.clone(), level_path.clone())?;
+            let layer = level.layers.first().map(|item| item.id.clone());
+            let components = action
+                .payload
+                .get("components")
+                .cloned()
+                .map(serde_json::from_value::<Vec<SceneComponent>>)
+                .transpose()?
+                .unwrap_or_default();
+            let object = SceneObject {
+                id: new_id("entity"),
+                name: action
+                    .payload
+                    .get("name")
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("AI Scene Object")
+                    .to_string(),
+                tags: vec!["ai-generated".to_string()],
+                layer,
+                visible: true,
+                asset_reference: action
+                    .payload
+                    .get("assetReference")
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string),
+                transform: Some(Transform {
+                    position: Vec3 {
+                        x: 0.0,
+                        y: 0.0,
+                        z: 0.0,
+                    },
+                    rotation: Vec3 {
+                        x: 0.0,
+                        y: 0.0,
+                        z: 0.0,
+                    },
+                    scale: Vec3 {
+                        x: 1.0,
+                        y: 1.0,
+                        z: 1.0,
+                    },
+                }),
+                components,
+            };
+            level.objects.push(object);
+            let saved = scene_service::save_level(project_root, level)?;
+            action.result = Some(serde_json::to_string(&saved)?);
+            Ok(action)
+        }
+        "create_forge_script" => {
+            ensure_permission(
+                permissions,
+                permissions.allow_edit_scripts,
+                "writing Forge Script files",
+            )?;
+            let project_root = required_project_root(&action)?;
+            let root = PathBuf::from(&project_root);
+            let relative_path = action
+                .payload
+                .get("relativePath")
+                .and_then(|value| value.as_str())
+                .unwrap_or("Source/AI/WerseeGenerated.forge");
+            let content = action
+                .payload
+                .get("content")
+                .and_then(|value| value.as_str())
+                .ok_or_else(|| anyhow!("AI script action is missing script content"))?;
+            if !relative_path.replace('\\', "/").ends_with(".forge") {
+                return Err(anyhow!("AI script actions can only write .forge files"));
+            }
+            let path = ensure_within(&root, &root.join(relative_path))?;
+            if let Some(parent) = path.parent() {
+                fs::create_dir_all(parent)?;
+            }
+            fs::write(&path, content)?;
+            action.result = Some(format!("Wrote {}", normalize_relative_path(&path, &root)));
+            Ok(action)
+        }
+        "create_blueprint_graph" => {
+            ensure_permission(
+                permissions,
+                permissions.allow_edit_blueprints,
+                "creating Blueprint graphs",
+            )?;
+            let project_root = required_project_root(&action)?;
+            let name = action
+                .payload
+                .get("name")
+                .and_then(|value| value.as_str())
+                .unwrap_or("AI_Generated_Graph");
+            let graph_type = action
+                .payload
+                .get("graphType")
+                .and_then(|value| value.as_str())
+                .unwrap_or("Actor Blueprint");
+            let graph = blueprint_service::create_graph(&project_root, name, graph_type)?;
+            action.result = Some(serde_json::to_string(&graph)?);
+            Ok(action)
+        }
+        "write_world_preset" => {
+            ensure_permission(
+                permissions,
+                permissions.allow_create_assets,
+                "creating world assets",
+            )?;
+            let project_root = required_project_root(&action)?;
+            let root = PathBuf::from(&project_root);
+            let relative_path = action
+                .payload
+                .get("relativePath")
+                .and_then(|value| value.as_str())
+                .unwrap_or("Worlds/AI_World/world.forgeworld");
+            let world = action
+                .payload
+                .get("world")
+                .cloned()
+                .ok_or_else(|| anyhow!("AI world action is missing world payload"))?;
+            let path = ensure_within(&root, &root.join(relative_path))?;
+            if let Some(parent) = path.parent() {
+                fs::create_dir_all(parent)?;
+            }
+            fs::write(&path, serde_json::to_vec_pretty(&world)?)?;
+            action.result = Some(format!("Wrote {}", normalize_relative_path(&path, &root)));
+            Ok(action)
+        }
+        other => Err(anyhow!("Unsupported AI action operation: {other}")),
+    }
+}
+
+fn ensure_permission(
+    permissions: &AiPermissionSet,
+    allowed: bool,
+    action_name: &str,
+) -> Result<()> {
+    if allowed || matches!(permissions.mode, PermissionMode::AutopilotProjectMode) {
+        return Ok(());
+    }
+    Err(AiError::PermissionDenied(format!(
+        "Wersee AI is not allowed to apply {action_name}. Enable the matching permission in the AI Permissions tab."
+    ))
+    .into())
+}
+
+fn required_project_root(action: &AiProposedAction) -> Result<String> {
+    action
+        .project_root
+        .clone()
+        .ok_or_else(|| anyhow!("AI action requires an open project"))
+}
+
+fn required_level_path(action: &AiProposedAction) -> Result<String> {
+    action
+        .level_path
+        .clone()
+        .ok_or_else(|| anyhow!("AI action requires an active level"))
 }

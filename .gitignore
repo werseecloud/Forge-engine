@@ -9,6 +9,7 @@ Backups/
 Cache/
 Saved/
 Screenshots/
+/AI/
 .vite/
 *.log
 npm-debug.log*

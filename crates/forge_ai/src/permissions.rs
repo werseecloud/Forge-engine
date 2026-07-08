@@ -27,12 +27,12 @@ pub struct AiPermissionSet {
 impl Default for AiPermissionSet {
     fn default() -> Self {
         Self {
-            mode: PermissionMode::Suggest,
+            mode: PermissionMode::ApplyWithConfirmation,
             allow_read_scene: true,
-            allow_edit_scene: false,
-            allow_edit_scripts: false,
-            allow_edit_blueprints: false,
-            allow_create_assets: false,
+            allow_edit_scene: true,
+            allow_edit_scripts: true,
+            allow_edit_blueprints: true,
+            allow_create_assets: true,
             allow_project_analysis: true,
             require_confirmation: true,
             local_only: true,

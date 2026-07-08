@@ -96,8 +96,10 @@ export interface AiContextRequest {
 
 export interface AiContext {
   summary: string;
+  projectRoot: string | null;
   selectedEntity: string | null;
   activeLevel: string | null;
+  activeLevelPath: string | null;
   activeFile: string | null;
   diagnostics: string[];
   allowedTools: string[];
@@ -113,6 +115,12 @@ export interface AiProposedAction {
   risk: string;
   requiresConfirmation: boolean;
   toolName: string;
+  operation: string;
+  payload: unknown;
+  projectRoot: string | null;
+  levelPath: string | null;
+  applied: boolean;
+  result: string | null;
 }
 
 export interface AiToolDescriptor {

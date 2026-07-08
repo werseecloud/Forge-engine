@@ -15,8 +15,10 @@ pub struct AiContextRequest {
 #[serde(rename_all = "camelCase")]
 pub struct AiContext {
     pub summary: String,
+    pub project_root: Option<String>,
     pub selected_entity: Option<String>,
     pub active_level: Option<String>,
+    pub active_level_path: Option<String>,
     pub active_file: Option<String>,
     pub diagnostics: Vec<String>,
     pub allowed_tools: Vec<String>,
@@ -39,10 +41,22 @@ pub fn build_context(request: AiContextRequest) -> AiContext {
     if let Some(intent) = &request.user_intent {
         parts.push(format!("User intent: {intent}"));
     }
+    let active_level_path = request
+        .active_level_json
+        .as_deref()
+        .and_then(|json| serde_json::from_str::<serde_json::Value>(json).ok())
+        .and_then(|value| {
+            value
+                .get("path")
+                .and_then(|path| path.as_str())
+                .map(str::to_string)
+        });
     AiContext {
         summary: parts.join("\n"),
+        project_root: request.project_root,
         selected_entity: request.selected_entity_json,
         active_level: request.active_level_json,
+        active_level_path,
         active_file: request.active_file_path,
         diagnostics: request.diagnostics,
         allowed_tools: vec![
