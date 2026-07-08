@@ -16,6 +16,7 @@ members = [
   "crates/forge_editor_bridge",
   "crates/forge_tools",
   "crates/forge_settings",
+  "crates/forge_ai",
   "src-tauri",
   "apps/forge_editor_core",
   "apps/forge_runtime",

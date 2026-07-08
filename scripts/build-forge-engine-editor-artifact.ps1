@@ -45,6 +45,13 @@ try {
     Copy-Item -Path (Join-Path $worldAssetsSource "*") -Destination $worldAssetsDest -Recurse -Force
   }
 
+  $aiSource = Join-Path $root "engine\AI"
+  $aiDest = Join-Path $root "artifacts\windows\AI"
+  if (Test-Path -LiteralPath $aiSource) {
+    New-Item -ItemType Directory -Force -Path $aiDest | Out-Null
+    Copy-Item -Path (Join-Path $aiSource "*") -Destination $aiDest -Recurse -Force
+  }
+
   if ($Unsigned) {
     Write-Warning "Built unsigned ForgeEngine.exe. SmartScreen will still warn until a Wersee Developers certificate is used."
   } else {

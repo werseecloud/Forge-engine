@@ -35,3 +35,4 @@ forge_rhi = { path = "../crates/forge_rhi", features = ["dx12", "vulkan", "metal
 forge_renderer = { path = "../crates/forge_renderer" }
 forge_raytracing = { path = "../crates/forge_raytracing" }
 forge_editor_bridge = { path = "../crates/forge_editor_bridge" }
+forge_ai = { path = "../crates/forge_ai" }

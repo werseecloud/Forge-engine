@@ -1024,6 +1024,105 @@ footer button:first-child { margin-right: auto; }
   max-height: 44px;
   overflow: auto;
 }
+.wersee-ai-modal {
+  width: min(1120px, calc(100vw - 32px));
+}
+.wersee-ai-modal .modal__header h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.wersee-ai-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.wersee-ai-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.045);
+  color: rgba(255,255,255,.72);
+}
+.wersee-ai-tabs button.is-active {
+  background: #F5F7FA;
+  color: #05070A;
+}
+.wersee-ai-body {
+  min-height: 0;
+  max-height: min(680px, calc(100vh - 190px));
+  overflow: auto;
+}
+.wersee-ai-panel {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.035);
+}
+.wersee-ai-panel h3 {
+  margin: 0;
+  color: #F5F7FA;
+  font-size: 14px;
+}
+.wersee-ai-panel textarea {
+  min-height: 116px;
+  resize: vertical;
+}
+.wersee-ai-panel pre {
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+  margin: 0;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.07);
+  background: rgba(0,0,0,.28);
+  color: #B7E3FF;
+}
+.wersee-ai-cards,
+.wersee-ai-model-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+.wersee-ai-cards div,
+.wersee-ai-model-list article,
+.wersee-ai-action {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.075);
+  background: rgba(5,7,10,.58);
+}
+.wersee-ai-cards span,
+.wersee-ai-model-list span,
+.wersee-ai-model-list small,
+.wersee-ai-action span,
+.wersee-ai-action small {
+  color: rgba(255,255,255,.62);
+}
+.wersee-ai-model-list small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wersee-ai-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.wersee-ai-warning {
+  margin: 0;
+  color: #FFD60A;
+}
 .field-stack {
   display: grid;
   gap: 6px;

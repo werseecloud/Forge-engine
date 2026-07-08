@@ -39,6 +39,7 @@ pub fn scan_available_components(install_path: String) -> Result<Vec<InstallerCo
         ("forge_starter_content", "Forge Starter Content", repo.join("engine\\StarterContent"), Path::new(&install_path).join("engine\\StarterContent")),
         ("forge_shader_library", "Forge Shader Library", repo.join("engine\\Shaders"), Path::new(&install_path).join("engine\\Shaders")),
         ("forge_runtime_files", "Forge Runtime Files", repo.join("engine\\Runtime"), Path::new(&install_path).join("engine\\Runtime")),
+        ("forge_ai_standard", "Forge AI Standard Local Model Pack", repo.join("engine\\AI"), Path::new(&install_path).join("ai")),
         ("forge_docs", "Forge Documentation", repo.join("docs"), Path::new(&install_path).join("docs")),
         ("forge_licenses", "Forge Licenses", repo.join("licenses"), Path::new(&install_path).join("licenses")),
     ] {

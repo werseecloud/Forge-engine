@@ -21,6 +21,8 @@ import { CreateProjectModal } from "../modals/CreateProjectModal";
 import { SettingsModal } from "../modals/SettingsModal";
 import { GraphicsSettingsModal } from "../GraphicsSettingsModal";
 import { CreateWorldModal } from "../world/CreateWorldModal";
+import { WerseeAIModal } from "../ai/WerseeAIModal";
+import { useAiShortcut } from "../ai/useAiShortcut";
 import { StatusBar } from "./StatusBar";
 import { TopToolbar } from "./TopToolbar";
 import { WindowsTitleBar } from "./WindowsTitleBar";
@@ -33,6 +35,7 @@ export function AppShell() {
   const [createWorldOpen, setCreateWorldOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [graphicsSettingsOpen, setGraphicsSettingsOpen] = useState(false);
+  const [werseeAiOpen, setWerseeAiOpen] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [watcher, setWatcher] = useState<WatcherStatus | null>(null);
   const [fps, setFps] = useState(0);
@@ -56,6 +59,8 @@ export function AppShell() {
   const activeLevel = useSceneStore((state) => state.activeLevel);
   const setActiveLevel = useSceneStore((state) => state.setActiveLevel);
   const setOutputLogs = useLogStore((state) => state.setOutputLogs);
+
+  useAiShortcut(() => setWerseeAiOpen((open) => !open));
 
   useEffect(() => {
     void bootstrap();
@@ -173,12 +178,13 @@ export function AppShell() {
         />
       ) : (
         <>
-          <WindowsTitleBar />
+          <WindowsTitleBar onOpenAI={() => setWerseeAiOpen(true)} />
           <TopToolbar
             onCreateProject={() => setCreateProjectOpen(true)}
             onOpenProject={openProject}
             onBlueprints={() => setActivePanel("blueprints")}
             onGraphicsSettings={() => setGraphicsSettingsOpen(true)}
+            onWerseeAI={() => setWerseeAiOpen(true)}
             onSettings={() => setSettingsOpen(true)}
             onSave={saveActiveLevel}
             onNotify={toast}
@@ -242,6 +248,12 @@ export function AppShell() {
         onClose={() => setGraphicsSettingsOpen(false)}
         onSaved={() => toast("success", "Graphics settings applied.")}
         onError={(message) => toast("error", message)}
+      />
+      <WerseeAIModal
+        open={werseeAiOpen}
+        onClose={() => setWerseeAiOpen(false)}
+        onError={(message) => toast("error", message)}
+        onSuccess={(message) => toast("success", message)}
       />
       <AnimatePresence>
         <ToastCenter toasts={toasts} />

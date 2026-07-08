@@ -21,3 +21,4 @@ pub mod skybox_commands;
 pub mod blueprint_commands;
 pub mod character_commands;
 pub mod world_commands;
+pub mod ai_commands;

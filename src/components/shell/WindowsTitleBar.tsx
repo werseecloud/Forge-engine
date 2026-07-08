@@ -5,7 +5,7 @@ import { useAppStore } from "../../stores/useAppStore";
 import { useProjectStore } from "../../stores/useProjectStore";
 import { useSceneStore } from "../../stores/useSceneStore";
 
-export function WindowsTitleBar() {
+export function WindowsTitleBar({ onOpenAI }: { onOpenAI: () => void }) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const currentProject = useProjectStore((state) => state.currentProject);
   const setActiveContentTab = useAppStore((state) => state.setActiveContentTab);
@@ -39,9 +39,9 @@ export function WindowsTitleBar() {
           <MenuButton icon={<RotateCcw size={14} />} label="Reset Scene" disabled={!activeLevel} onClick={resetScene} />
         </HeaderMenu>
         <HeaderMenu label="AI" icon={<Sparkles size={13} />} open={openMenu === "ai"} onToggle={() => setOpenMenu(openMenu === "ai" ? null : "ai")}>
-          <MenuButton icon={<Bot size={14} />} label="Open AI Modal" onClick={() => setOpenMenu(null)} />
-          <MenuButton icon={<Settings2 size={14} />} label="AI Settings" onClick={() => setOpenMenu(null)} />
-          <MenuButton icon={<Package size={14} />} label="Local AI Installer" onClick={() => setOpenMenu(null)} />
+          <MenuButton icon={<Bot size={14} />} label="Open AI Modal" hint="Ctrl+I" onClick={() => { setOpenMenu(null); onOpenAI(); }} />
+          <MenuButton icon={<Settings2 size={14} />} label="AI Settings" onClick={() => { setOpenMenu(null); onOpenAI(); }} />
+          <MenuButton icon={<Package size={14} />} label="Local AI Installer" onClick={() => { setOpenMenu(null); onOpenAI(); }} />
         </HeaderMenu>
         <HeaderMenu label="Screens" icon={<Box size={13} />} open={openMenu === "screens"} onToggle={() => setOpenMenu(openMenu === "screens" ? null : "screens")}>
           <MenuButton icon={<Code2 size={14} />} label="Code" onClick={() => openTab("Content Browser")} />

@@ -1,0 +1,16 @@
+{
+  "modelType": "forge_ai_model",
+  "name": "Qwen3 4B Q5 Local",
+  "family": "qwen",
+  "format": "gguf",
+  "quantization": "Q5_0",
+  "parameterSize": "4B",
+  "contextLength": 8192,
+  "recommendedRamGb": 8,
+  "recommendedVramGb": 0,
+  "offline": true,
+  "supportsTools": true,
+  "supportsCode": true,
+  "supportsSceneEditing": true,
+  "modelFile": "models/Qwen3-4B-Q5_0.gguf"
+}

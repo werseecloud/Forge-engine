@@ -110,7 +110,30 @@ pub fn run() {
             commands::character_commands::select_procedural_animation,
             commands::character_commands::generate_animation_state_machine,
             commands::world_commands::create_world,
-            commands::world_commands::discover_world_assets
+            commands::world_commands::discover_world_assets,
+            commands::ai_commands::ai_probe_device,
+            commands::ai_commands::ai_get_device_profile,
+            commands::ai_commands::ai_list_installed_models,
+            commands::ai_commands::ai_import_model,
+            commands::ai_commands::ai_validate_model,
+            commands::ai_commands::ai_select_model,
+            commands::ai_commands::ai_load_model,
+            commands::ai_commands::ai_unload_model,
+            commands::ai_commands::ai_get_model_status,
+            commands::ai_commands::ai_get_recommended_models,
+            commands::ai_commands::ai_generate,
+            commands::ai_commands::ai_cancel_generation,
+            commands::ai_commands::ai_build_context,
+            commands::ai_commands::ai_get_available_tools,
+            commands::ai_commands::ai_propose_actions,
+            commands::ai_commands::ai_apply_action,
+            commands::ai_commands::ai_reject_action,
+            commands::ai_commands::ai_preview_action,
+            commands::ai_commands::ai_get_permissions,
+            commands::ai_commands::ai_set_permissions,
+            commands::ai_commands::ai_enable_offline_mode,
+            commands::ai_commands::ai_get_logs,
+            commands::ai_commands::ai_clear_logs
         ])
         .run(tauri::generate_context!())
         .expect("failed to run Forge Engine editor");

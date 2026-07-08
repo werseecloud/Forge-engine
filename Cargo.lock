@@ -1264,6 +1264,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa9a19cbb55df58761df49b23516a86d432839add4af60fc256da840f66ed35b"
 
 [[package]]
+name = "forge_ai"
+version = "1.0.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "dirs 5.0.1",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "uuid",
+ "walkdir",
+]
+
+[[package]]
 name = "forge_asset_worker"
 version = "1.0.0"
 dependencies = [
@@ -1348,6 +1362,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "dirs 5.0.1",
+ "forge_ai",
  "forge_assets",
  "forge_editor_bridge",
  "forge_process",
@@ -4115,6 +4130,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "sha1_smol"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbfa15b3dddfee50a0fff136974b3e1bde555604ba463834a7eb7deb6417705d"
+
+[[package]]
 name = "sha2"
 version = "0.10.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5311,6 +5332,7 @@ dependencies = [
  "getrandom 0.4.3",
  "js-sys",
  "serde_core",
+ "sha1_smol",
  "wasm-bindgen",
 ]
 

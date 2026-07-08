@@ -6,6 +6,20 @@ import type { SceneLevel, SceneObject, LevelSummary } from "../types/scene";
 import type { AppSettings } from "../types/settings";
 import type { CreateWorldRequest, CreateWorldResult, WorldAssetManifest } from "../types/world";
 import type {
+  AiCompatibilityReport,
+  AiContext,
+  AiContextRequest,
+  AiGenerationResult,
+  AiPermissionSet,
+  AiPrompt,
+  AiProposedAction,
+  AiToolDescriptor,
+  GenerateOptions,
+  HardwareProfile,
+  InstalledModel,
+  ModelStatus
+} from "../types/ai";
+import type {
   AnimationDatabase,
   AnimationSelectionInput,
   AnimationSelectionResult,
@@ -112,5 +126,29 @@ export const commands = {
     invoke<GeneratedAnimationStateMachine>("generate_animation_state_machine", { animationDatabasePath }),
 
   createWorld: (request: CreateWorldRequest) => invoke<CreateWorldResult>("create_world", { request }),
-  discoverWorldAssets: () => invoke<WorldAssetManifest>("discover_world_assets")
+  discoverWorldAssets: () => invoke<WorldAssetManifest>("discover_world_assets"),
+
+  aiProbeDevice: () => invoke<AiCompatibilityReport>("ai_probe_device"),
+  aiGetDeviceProfile: () => invoke<HardwareProfile>("ai_get_device_profile"),
+  aiListInstalledModels: () => invoke<InstalledModel[]>("ai_list_installed_models"),
+  aiImportModel: (path: string) => invoke<InstalledModel>("ai_import_model", { path }),
+  aiValidateModel: (modelId: string) => invoke<ModelStatus>("ai_validate_model", { modelId }),
+  aiSelectModel: (modelId: string) => invoke<InstalledModel>("ai_select_model", { modelId }),
+  aiLoadModel: (modelId: string) => invoke<{ modelId: string; backend: string; loaded: boolean }>("ai_load_model", { modelId }),
+  aiUnloadModel: (modelId: string) => invoke<void>("ai_unload_model", { modelId }),
+  aiGetModelStatus: (modelId: string) => invoke<ModelStatus>("ai_get_model_status", { modelId }),
+  aiGetRecommendedModels: () => invoke<AiCompatibilityReport>("ai_get_recommended_models"),
+  aiGenerate: (prompt: AiPrompt, options: GenerateOptions) => invoke<AiGenerationResult>("ai_generate", { prompt, options }),
+  aiCancelGeneration: (jobId: string) => invoke<void>("ai_cancel_generation", { jobId }),
+  aiBuildContext: (request: AiContextRequest) => invoke<AiContext>("ai_build_context", { request }),
+  aiGetAvailableTools: () => invoke<AiToolDescriptor[]>("ai_get_available_tools"),
+  aiProposeActions: (userPrompt: string, context: AiContext) => invoke<AiProposedAction[]>("ai_propose_actions", { userPrompt, context }),
+  aiApplyAction: (actionId: string) => invoke<AiProposedAction>("ai_apply_action", { actionId }),
+  aiRejectAction: (actionId: string) => invoke<void>("ai_reject_action", { actionId }),
+  aiPreviewAction: (actionId: string) => invoke<AiProposedAction>("ai_preview_action", { actionId }),
+  aiGetPermissions: () => invoke<AiPermissionSet>("ai_get_permissions"),
+  aiSetPermissions: (permissions: AiPermissionSet) => invoke<AiPermissionSet>("ai_set_permissions", { permissions }),
+  aiEnableOfflineMode: (value: boolean) => invoke<AiPermissionSet>("ai_enable_offline_mode", { value }),
+  aiGetLogs: () => invoke<string[]>("ai_get_logs"),
+  aiClearLogs: () => invoke<void>("ai_clear_logs")
 };
