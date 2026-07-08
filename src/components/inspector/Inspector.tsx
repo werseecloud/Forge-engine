@@ -1,3 +1,4 @@
+import { Layers3 } from "lucide-react";
 import { useAppStore } from "../../stores/useAppStore";
 import { useSceneStore } from "../../stores/useSceneStore";
 import { EmptyState } from "../shared/EmptyState";
@@ -26,8 +27,15 @@ export function Inspector({ onError }: InspectorProps) {
     return (
       <div className="inspector-content">
         <div className="inspector-heading">
-          <strong>{activeLevel.name}</strong>
-          <span>Active Level</span>
+          <div className="inspector-heading__icon"><Layers3 size={18} /></div>
+          <div className="inspector-heading__main">
+            <strong>{activeLevel.name}</strong>
+            <span>Active Level</span>
+          </div>
+          <div className="inspector-heading__meta">
+            <b>{activeLevel.objects.length} objects</b>
+            <b>{activeLevel.layers.length} layers</b>
+          </div>
         </div>
         <InspectorSection title="Level Metadata">
           <div className="detail-grid">
@@ -43,4 +51,3 @@ export function Inspector({ onError }: InspectorProps) {
 
   return <EmptyState title="Nothing selected" detail="Select an asset, level, or scene object to inspect real data." />;
 }
-

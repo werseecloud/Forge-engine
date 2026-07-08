@@ -11,8 +11,8 @@ interface InspectorSectionProps {
 export function InspectorSection({ title, children, defaultOpen = true }: InspectorSectionProps) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <section className="inspector-section">
-      <button className="inspector-section__header" onClick={() => setOpen(!open)}>
+    <section className={`inspector-section ${open ? "is-open" : ""}`}>
+      <button type="button" className="inspector-section__header" onClick={() => setOpen(!open)}>
         <ChevronDown size={15} className={open ? "" : "is-closed"} />
         <span>{title}</span>
       </button>
@@ -20,4 +20,3 @@ export function InspectorSection({ title, children, defaultOpen = true }: Inspec
     </section>
   );
 }
-

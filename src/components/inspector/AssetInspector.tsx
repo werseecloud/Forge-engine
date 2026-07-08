@@ -1,4 +1,4 @@
-import { Save } from "lucide-react";
+import { FileBox, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { formatBytes, formatDate } from "../../lib/formatters";
 import { commands } from "../../lib/tauri";
@@ -36,8 +36,15 @@ export function AssetInspector({ asset, onError }: AssetInspectorProps) {
   return (
     <div className="inspector-content">
       <div className="inspector-heading">
-        <strong>{asset.fileName}</strong>
-        <span>{asset.assetType}</span>
+        <div className="inspector-heading__icon"><FileBox size={18} /></div>
+        <div className="inspector-heading__main">
+          <strong>{asset.fileName}</strong>
+          <span>{asset.assetType}</span>
+        </div>
+        <div className="inspector-heading__meta">
+          <b>{asset.extension.toUpperCase()}</b>
+          <b>{formatBytes(asset.fileSize)}</b>
+        </div>
       </div>
       <InspectorSection title="Metadata">
         <div className="detail-grid">
@@ -57,4 +64,3 @@ export function AssetInspector({ asset, onError }: AssetInspectorProps) {
     </div>
   );
 }
-

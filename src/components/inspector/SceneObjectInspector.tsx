@@ -1,4 +1,4 @@
-import { Save, Trash2 } from "lucide-react";
+import { Box, Component, Eye, EyeOff, Save, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { normalizeSkyboxSettings, type SkyboxResolution } from "../../lib/skybox";
 import { commands } from "../../lib/tauri";
@@ -64,8 +64,15 @@ export function SceneObjectInspector({ object, onError }: SceneObjectInspectorPr
   return (
     <div className="inspector-content">
       <div className="inspector-heading">
-        <strong>{draft.name}</strong>
-        <span>Scene Object</span>
+        <div className="inspector-heading__icon"><Box size={18} /></div>
+        <div className="inspector-heading__main">
+          <strong>{draft.name}</strong>
+          <span>Scene Object</span>
+        </div>
+        <div className="inspector-heading__meta">
+          <b>{draft.visible ? <Eye size={12} /> : <EyeOff size={12} />}{draft.visible ? "Visible" : "Hidden"}</b>
+          <b>{draft.components.length} components</b>
+        </div>
       </div>
       <InspectorSection title="Details">
         <div className="inspector-form-grid">
@@ -171,6 +178,20 @@ export function SceneObjectInspector({ object, onError }: SceneObjectInspectorPr
           </div>
         </InspectorSection>
       ) : null}
+      <InspectorSection title="Components" defaultOpen={false}>
+        <div className="inspector-component-list">
+          {draft.components.map((component, index) => (
+            <article key={`${component.componentType}-${index}`} className="inspector-component-card">
+              <header>
+                <Component size={14} />
+                <strong>{component.componentType}</strong>
+              </header>
+              <pre>{JSON.stringify(component.data, null, 2)}</pre>
+            </article>
+          ))}
+          {draft.components.length === 0 ? <p className="inspector-muted">No components attached.</p> : null}
+        </div>
+      </InspectorSection>
       <div className="inspector-actions">
         <PillButton active onClick={save} icon={<Save size={15} />}>Save</PillButton>
         <PillButton onClick={remove} icon={<Trash2 size={15} />}>Delete</PillButton>
