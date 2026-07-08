@@ -87,7 +87,7 @@ export function BlueprintsPage({ projectRoot, onClose, onError, onSuccess }: Blu
           <BlueprintCanvas />
           <BlueprintConsole />
         </main>
-        <BlueprintRightPanel />
+        <BlueprintRightPanel projectRoot={projectRoot} onError={onError} onSuccess={onSuccess} />
       </div>
       {leavePromptOpen ? (
         <div className="blueprint-leave-modal">

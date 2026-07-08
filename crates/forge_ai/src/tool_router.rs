@@ -65,6 +65,12 @@ impl AiToolRouter {
                 false,
             ),
             tool(
+                "create_blueprint_graph",
+                "Blueprints",
+                "Create and save a complete Blueprint graph.",
+                false,
+            ),
+            tool(
                 "suggest_script_fix",
                 "Forge Script",
                 "Suggest a Forge Script patch.",
@@ -209,19 +215,21 @@ impl AiToolRouter {
             ));
         }
         if lower.contains("blueprint") || lower.contains("node") {
+            let graph = blueprint_graph_for_prompt(user_prompt);
             actions.push(action(
                 context,
-                "Create Blueprint starter nodes",
-                "Add event, branch and action nodes for the requested gameplay logic.",
+                "Create Blueprint graph",
+                "Generate a complete Blueprint graph from the prompt and save it to Content/Blueprints.",
                 "ActiveBlueprintGraph",
                 None,
-                Some("New node proposal"),
+                Some(graph["name"].as_str().unwrap_or("AI Generated Blueprint")),
                 "low",
                 "create_blueprint_node",
                 "create_blueprint_graph",
                 json!({
-                    "name": "AI_Generated_Graph",
-                    "graphType": "Actor Blueprint"
+                    "name": graph["name"],
+                    "graphType": graph["graphType"],
+                    "graph": graph
                 }),
             ));
         }
@@ -434,6 +442,526 @@ component WerseeGeneratedBehavior {{
     )
 }
 
+fn blueprint_graph_for_prompt(user_prompt: &str) -> Value {
+    let lower = user_prompt.to_lowercase();
+    if lower.contains("door") || lower.contains("deur") || lower.contains("open") {
+        return door_blueprint_graph();
+    }
+    if lower.contains("health") || lower.contains("damage") || lower.contains("hp") {
+        return health_blueprint_graph();
+    }
+    if lower.contains("pickup") || lower.contains("item") || lower.contains("inventory") {
+        return pickup_blueprint_graph();
+    }
+    if lower.contains("ai") || lower.contains("patrol") || lower.contains("enemy") {
+        return ai_patrol_blueprint_graph();
+    }
+    generic_blueprint_graph(user_prompt)
+}
+
+fn door_blueprint_graph() -> Value {
+    let key = bp_node(
+        "event.key_pressed",
+        "Event On Key Pressed",
+        "Event Nodes",
+        80.0,
+        120.0,
+    )
+    .with_outputs(vec![
+        bp_pin("then", "Then", "output", "execution", "Exec", false),
+        bp_pin("key", "Key", "output", "data", "String", false),
+    ])
+    .with_properties(json!({ "key": "E" }));
+    let branch = bp_node("flow.branch", "Branch", "Flow Control Nodes", 390.0, 118.0)
+        .with_inputs(vec![
+            bp_pin("exec", "Exec", "input", "execution", "Exec", true),
+            bp_pin("condition", "Condition", "input", "data", "Bool", true)
+                .with_default(json!(true)),
+        ])
+        .with_outputs(vec![
+            bp_pin("then", "True", "output", "execution", "Exec", false),
+            bp_pin("else", "False", "output", "execution", "Exec", false),
+        ]);
+    let open = bp_node(
+        "gameplay.open_door",
+        "Open Door",
+        "Gameplay Nodes",
+        710.0,
+        90.0,
+    )
+    .with_inputs(vec![
+        bp_pin("exec", "Exec", "input", "execution", "Exec", true),
+        bp_pin("door", "Door", "input", "data", "EntityRef", false),
+    ])
+    .with_outputs(vec![bp_pin(
+        "then",
+        "Then",
+        "output",
+        "execution",
+        "Exec",
+        false,
+    )]);
+    let sound = bp_node(
+        "audio.play_sound",
+        "Play Sound 2D",
+        "Audio Nodes",
+        710.0,
+        250.0,
+    )
+    .with_inputs(vec![
+        bp_pin("exec", "Exec", "input", "execution", "Exec", true),
+        bp_pin("sound", "Sound", "input", "data", "AudioRef", false),
+    ])
+    .with_outputs(vec![bp_pin(
+        "then",
+        "Then",
+        "output",
+        "execution",
+        "Exec",
+        false,
+    )])
+    .with_properties(json!({ "sound": "door_open" }));
+    graph(
+        "AI_Door_Interaction",
+        "Actor Blueprint",
+        vec![key.into(), branch.into(), open.into(), sound.into()],
+        vec![
+            bp_edge(
+                "event.key_pressed",
+                "then",
+                "flow.branch",
+                "exec",
+                "execution",
+                "Exec",
+            ),
+            bp_edge(
+                "flow.branch",
+                "then",
+                "gameplay.open_door",
+                "exec",
+                "execution",
+                "Exec",
+            ),
+            bp_edge(
+                "flow.branch",
+                "then",
+                "audio.play_sound",
+                "exec",
+                "execution",
+                "Exec",
+            ),
+        ],
+        vec![
+            json!({ "id": Uuid::new_v4().to_string(), "name": "OpenDistance", "dataType": "Float", "defaultValue": 250.0, "exposed": true }),
+        ],
+    )
+}
+
+fn health_blueprint_graph() -> Value {
+    let begin = bp_node(
+        "event.begin_play",
+        "Event Begin Play",
+        "Event Nodes",
+        80.0,
+        120.0,
+    )
+    .with_outputs(vec![bp_pin(
+        "then",
+        "Then",
+        "output",
+        "execution",
+        "Exec",
+        false,
+    )]);
+    let set = bp_node(
+        "variable.set",
+        "Set Variable",
+        "Variable Nodes",
+        360.0,
+        120.0,
+    )
+    .with_inputs(vec![
+        bp_pin("exec", "Exec", "input", "execution", "Exec", true),
+        bp_pin("name", "Name", "input", "data", "String", false).with_default(json!("Health")),
+        bp_pin("value", "Value", "input", "data", "Any", false).with_default(json!(100.0)),
+    ])
+    .with_outputs(vec![bp_pin(
+        "then",
+        "Then",
+        "output",
+        "execution",
+        "Exec",
+        false,
+    )])
+    .with_properties(json!({ "name": "Health", "value": 100.0 }));
+    let print = bp_node(
+        "debug.print_string",
+        "Print String",
+        "Debug Nodes",
+        640.0,
+        120.0,
+    )
+    .with_inputs(vec![
+        bp_pin("exec", "Exec", "input", "execution", "Exec", true),
+        bp_pin("message", "Message", "input", "data", "String", false)
+            .with_default(json!("Health initialized")),
+    ])
+    .with_outputs(vec![bp_pin(
+        "then",
+        "Then",
+        "output",
+        "execution",
+        "Exec",
+        false,
+    )])
+    .with_properties(json!({ "message": "Health initialized" }));
+    graph(
+        "AI_Health_System",
+        "Actor Blueprint",
+        vec![begin.into(), set.into(), print.into()],
+        vec![
+            bp_edge(
+                "event.begin_play",
+                "then",
+                "variable.set",
+                "exec",
+                "execution",
+                "Exec",
+            ),
+            bp_edge(
+                "variable.set",
+                "then",
+                "debug.print_string",
+                "exec",
+                "execution",
+                "Exec",
+            ),
+        ],
+        vec![
+            json!({ "id": Uuid::new_v4().to_string(), "name": "Health", "dataType": "Float", "defaultValue": 100.0, "exposed": true }),
+        ],
+    )
+}
+
+fn pickup_blueprint_graph() -> Value {
+    let enter = bp_node(
+        "event.trigger_enter",
+        "Event On Trigger Enter",
+        "Event Nodes",
+        80.0,
+        120.0,
+    )
+    .with_outputs(vec![
+        bp_pin("then", "Then", "output", "execution", "Exec", false),
+        bp_pin("other", "Other Actor", "output", "data", "EntityRef", false),
+    ]);
+    let add = bp_node(
+        "gameplay.add_item",
+        "Add Item",
+        "Gameplay Nodes",
+        380.0,
+        120.0,
+    )
+    .with_inputs(vec![
+        bp_pin("exec", "Exec", "input", "execution", "Exec", true),
+        bp_pin("item", "Item", "input", "data", "String", false).with_default(json!("Pickup")),
+    ])
+    .with_outputs(vec![bp_pin(
+        "then",
+        "Then",
+        "output",
+        "execution",
+        "Exec",
+        false,
+    )])
+    .with_properties(json!({ "item": "Pickup" }));
+    let destroy = bp_node(
+        "entity.destroy",
+        "Destroy Entity",
+        "Entity/Actor Nodes",
+        680.0,
+        120.0,
+    )
+    .with_inputs(vec![
+        bp_pin("exec", "Exec", "input", "execution", "Exec", true),
+        bp_pin("entity", "Entity", "input", "data", "EntityRef", false),
+    ])
+    .with_outputs(vec![bp_pin(
+        "then",
+        "Then",
+        "output",
+        "execution",
+        "Exec",
+        false,
+    )]);
+    graph(
+        "AI_Pickup_Item",
+        "Actor Blueprint",
+        vec![enter.into(), add.into(), destroy.into()],
+        vec![
+            bp_edge(
+                "event.trigger_enter",
+                "then",
+                "gameplay.add_item",
+                "exec",
+                "execution",
+                "Exec",
+            ),
+            bp_edge(
+                "gameplay.add_item",
+                "then",
+                "entity.destroy",
+                "exec",
+                "execution",
+                "Exec",
+            ),
+        ],
+        vec![
+            json!({ "id": Uuid::new_v4().to_string(), "name": "ItemId", "dataType": "String", "defaultValue": "Pickup", "exposed": true }),
+        ],
+    )
+}
+
+fn ai_patrol_blueprint_graph() -> Value {
+    let begin = bp_node(
+        "event.begin_play",
+        "Event Begin Play",
+        "Event Nodes",
+        80.0,
+        120.0,
+    )
+    .with_outputs(vec![bp_pin(
+        "then",
+        "Then",
+        "output",
+        "execution",
+        "Exec",
+        false,
+    )]);
+    let patrol = bp_node("ai.patrol_path", "AI Patrol Path", "AI Nodes", 380.0, 120.0)
+        .with_inputs(vec![bp_pin(
+            "exec",
+            "Exec",
+            "input",
+            "execution",
+            "Exec",
+            true,
+        )])
+        .with_outputs(vec![bp_pin(
+            "then",
+            "Then",
+            "output",
+            "execution",
+            "Exec",
+            false,
+        )]);
+    let los = bp_node(
+        "ai.line_of_sight",
+        "AI Has Line Of Sight",
+        "AI Nodes",
+        380.0,
+        300.0,
+    )
+    .with_inputs(vec![bp_pin(
+        "target",
+        "Target",
+        "input",
+        "data",
+        "EntityRef",
+        false,
+    )])
+    .with_outputs(vec![bp_pin(
+        "visible", "Visible", "output", "data", "Bool", false,
+    )]);
+    graph(
+        "AI_Enemy_Patrol",
+        "AI Blueprint",
+        vec![begin.into(), patrol.into(), los.into()],
+        vec![bp_edge(
+            "event.begin_play",
+            "then",
+            "ai.patrol_path",
+            "exec",
+            "execution",
+            "Exec",
+        )],
+        vec![
+            json!({ "id": Uuid::new_v4().to_string(), "name": "PatrolRadius", "dataType": "Float", "defaultValue": 800.0, "exposed": true }),
+        ],
+    )
+}
+
+fn generic_blueprint_graph(user_prompt: &str) -> Value {
+    let begin = bp_node(
+        "event.begin_play",
+        "Event Begin Play",
+        "Event Nodes",
+        80.0,
+        120.0,
+    )
+    .with_outputs(vec![bp_pin(
+        "then",
+        "Then",
+        "output",
+        "execution",
+        "Exec",
+        false,
+    )]);
+    let print = bp_node(
+        "debug.print_string",
+        "Print String",
+        "Debug Nodes",
+        370.0,
+        120.0,
+    )
+    .with_inputs(vec![
+        bp_pin("exec", "Exec", "input", "execution", "Exec", true),
+        bp_pin("message", "Message", "input", "data", "String", false)
+            .with_default(json!(format!("AI Blueprint: {user_prompt}"))),
+    ])
+    .with_outputs(vec![bp_pin(
+        "then",
+        "Then",
+        "output",
+        "execution",
+        "Exec",
+        false,
+    )])
+    .with_properties(json!({ "message": format!("AI Blueprint: {user_prompt}") }));
+    graph(
+        "AI_Generated_Blueprint",
+        "Actor Blueprint",
+        vec![begin.into(), print.into()],
+        vec![bp_edge(
+            "event.begin_play",
+            "then",
+            "debug.print_string",
+            "exec",
+            "execution",
+            "Exec",
+        )],
+        Vec::new(),
+    )
+}
+
+fn graph(
+    name: &str,
+    graph_type: &str,
+    nodes: Vec<Value>,
+    edges: Vec<Value>,
+    variables: Vec<Value>,
+) -> Value {
+    let now = chrono::Utc::now().to_rfc3339();
+    json!({
+        "graphId": Uuid::new_v4().to_string(),
+        "name": name,
+        "graphType": graph_type,
+        "nodes": nodes,
+        "edges": edges,
+        "variables": variables,
+        "exposedInputs": [],
+        "exposedOutputs": [],
+        "metadata": { "generatedBy": "Wersee AI", "source": "local" },
+        "version": 1,
+        "createdAt": now,
+        "updatedAt": now
+    })
+}
+
+struct BlueprintNodeValue(Value);
+
+impl BlueprintNodeValue {
+    fn with_inputs(mut self, inputs: Vec<Value>) -> Self {
+        self.0["inputs"] = Value::Array(inputs);
+        self
+    }
+
+    fn with_outputs(mut self, outputs: Vec<Value>) -> Self {
+        self.0["outputs"] = Value::Array(outputs);
+        self
+    }
+
+    fn with_properties(mut self, properties: Value) -> Self {
+        self.0["properties"] = properties;
+        self
+    }
+}
+
+impl From<BlueprintNodeValue> for Value {
+    fn from(node: BlueprintNodeValue) -> Self {
+        node.0
+    }
+}
+
+fn bp_node(node_type: &str, title: &str, category: &str, x: f64, y: f64) -> BlueprintNodeValue {
+    BlueprintNodeValue(json!({
+        "id": node_type,
+        "type": node_type,
+        "title": title,
+        "category": category,
+        "position": { "x": x, "y": y },
+        "inputs": [],
+        "outputs": [],
+        "properties": {},
+        "executionMode": "impure",
+        "breakpointEnabled": false,
+        "comment": "",
+        "disabled": false,
+        "metadata": { "generatedBy": "Wersee AI" }
+    }))
+}
+
+fn bp_pin(
+    id: &str,
+    name: &str,
+    direction: &str,
+    pin_kind: &str,
+    data_type: &str,
+    required: bool,
+) -> Value {
+    json!({
+        "id": id,
+        "name": name,
+        "direction": direction,
+        "pinKind": pin_kind,
+        "dataType": data_type,
+        "required": required,
+        "defaultValue": null,
+        "multipleConnectionsAllowed": direction == "output"
+    })
+}
+
+trait BlueprintPinDefault {
+    fn with_default(self, value: Value) -> Value;
+}
+
+impl BlueprintPinDefault for Value {
+    fn with_default(mut self, value: Value) -> Value {
+        self["defaultValue"] = value;
+        self
+    }
+}
+
+fn bp_edge(
+    from_node: &str,
+    from_pin: &str,
+    to_node: &str,
+    to_pin: &str,
+    edge_type: &str,
+    data_type: &str,
+) -> Value {
+    json!({
+        "id": Uuid::new_v4().to_string(),
+        "fromNodeId": from_node,
+        "fromPinId": from_pin,
+        "toNodeId": to_node,
+        "toPinId": to_pin,
+        "edgeType": edge_type,
+        "dataType": data_type,
+        "metadata": { "generatedBy": "Wersee AI" }
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -462,6 +990,8 @@ mod tests {
             ),
             active_level: Some(json!({ "path": "Content/Scenes/Main.forge_scene" }).to_string()),
             active_level_path: Some("Content/Scenes/Main.forge_scene".to_string()),
+            asset_index: None,
+            active_blueprint_graph: None,
             active_file: None,
             diagnostics: Vec::new(),
             allowed_tools: Vec::new(),

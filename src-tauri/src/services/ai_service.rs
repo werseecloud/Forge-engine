@@ -396,17 +396,23 @@ fn apply_action_mutation(
                 "creating Blueprint graphs",
             )?;
             let project_root = required_project_root(&action)?;
-            let name = action
-                .payload
-                .get("name")
-                .and_then(|value| value.as_str())
-                .unwrap_or("AI_Generated_Graph");
-            let graph_type = action
-                .payload
-                .get("graphType")
-                .and_then(|value| value.as_str())
-                .unwrap_or("Actor Blueprint");
-            let graph = blueprint_service::create_graph(&project_root, name, graph_type)?;
+            let graph = if let Some(graph_value) = action.payload.get("graph").cloned() {
+                let graph: crate::models::blueprint::BlueprintGraph =
+                    serde_json::from_value(graph_value)?;
+                blueprint_service::save_graph(&project_root, graph)?
+            } else {
+                let name = action
+                    .payload
+                    .get("name")
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("AI_Generated_Graph");
+                let graph_type = action
+                    .payload
+                    .get("graphType")
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("Actor Blueprint");
+                blueprint_service::create_graph(&project_root, name, graph_type)?
+            };
             action.result = Some(serde_json::to_string(&graph)?);
             Ok(action)
         }

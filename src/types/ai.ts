@@ -89,6 +89,8 @@ export interface AiContextRequest {
   projectRoot?: string | null;
   selectedEntityJson?: string | null;
   activeLevelJson?: string | null;
+  assetIndexJson?: string | null;
+  activeBlueprintGraphJson?: string | null;
   activeFilePath?: string | null;
   diagnostics: string[];
   userIntent?: string | null;
@@ -100,6 +102,8 @@ export interface AiContext {
   selectedEntity: string | null;
   activeLevel: string | null;
   activeLevelPath: string | null;
+  assetIndex: string | null;
+  activeBlueprintGraph: string | null;
   activeFile: string | null;
   diagnostics: string[];
   allowedTools: string[];

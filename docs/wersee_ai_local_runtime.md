@@ -38,6 +38,12 @@ Wersee AI adds offline-first local AI infrastructure to Forge Engine.
   - Blueprint node creation
   - Forge Script fixes
   - playable character setup
+- Scene-aware AI context:
+  - active level path, layers and scene objects
+  - selected entity and Inspector data
+  - project asset index summaries
+  - active Blueprint graph nodes, edges, variables and diagnostics
+- Blueprint AI sidebar for generating complete Blueprint graphs from the current scene/project context.
 - Real action application after explicit user confirmation:
   - scene object transform/component edits are written back to the active `.forge_scene`
   - Forge Script drafts are written as `.forge` files inside the project

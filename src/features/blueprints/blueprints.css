@@ -732,6 +732,215 @@
   color: #05070A;
 }
 
+.blueprint-ai-sidebar {
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(96px, auto) auto auto minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.blueprint-ai-sidebar header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(41,151,255,.18), transparent 34%),
+    linear-gradient(180deg, rgba(16,22,29,.94), rgba(5,7,10,.92));
+  border: 1px solid rgba(41,151,255,.18);
+}
+
+.blueprint-ai-sidebar header div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.blueprint-ai-sidebar header strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #F5F7FA;
+}
+
+.blueprint-ai-sidebar header span,
+.blueprint-ai-sidebar__context p,
+.blueprint-ai-sidebar__results article span,
+.blueprint-ai-sidebar__results article small,
+.blueprint-ai-sidebar__results > p {
+  color: rgba(255,255,255,.58);
+}
+
+.blueprint-ai-sidebar__context {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 11px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.07);
+}
+
+.blueprint-ai-sidebar__context b {
+  color: #CFE7FF;
+  font-size: 12px;
+}
+
+.blueprint-ai-sidebar__context p {
+  max-height: 76px;
+  margin: 0;
+  overflow: auto;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.blueprint-ai-sidebar textarea {
+  min-height: 104px;
+  max-height: 180px;
+  resize: vertical;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.09);
+  background: #05070A;
+  color: #F5F7FA;
+  padding: 10px;
+  line-height: 1.45;
+  outline: none;
+  transition: border-color .16s ease, box-shadow .16s ease;
+}
+
+.blueprint-ai-sidebar textarea:focus {
+  border-color: rgba(41,151,255,.58);
+  box-shadow: 0 0 0 3px rgba(30,123,255,.18);
+}
+
+.blueprint-ai-sidebar__quick {
+  max-height: 138px;
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  gap: 6px;
+  padding-right: 2px;
+}
+
+.blueprint-ai-sidebar__quick button {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 8px 10px;
+  border-radius: 10px;
+  text-align: left;
+  color: rgba(255,255,255,.78);
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.065);
+  transition: background .16s ease, border-color .16s ease, color .16s ease;
+}
+
+.blueprint-ai-sidebar__quick button:hover {
+  background: rgba(30,123,255,.16);
+  border-color: rgba(41,151,255,.34);
+  color: #fff;
+}
+
+.blueprint-ai-sidebar__actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 7px;
+}
+
+.blueprint-action--primary {
+  background: linear-gradient(180deg, #315DFF, #1C45D8);
+  border-color: rgba(99,142,255,.52);
+  color: #fff;
+}
+
+.blueprint-action:disabled,
+.blueprint-ai-sidebar__quick button:disabled,
+.blueprint-ai-sidebar__results button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.blueprint-ai-sidebar__results {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding-right: 2px;
+}
+
+.blueprint-ai-sidebar__results article {
+  display: grid;
+  gap: 7px;
+  padding: 10px;
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.025)),
+    rgba(5,7,10,.72);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.blueprint-ai-sidebar__results article strong {
+  color: #F5F7FA;
+}
+
+.blueprint-ai-sidebar__results article code {
+  max-height: 86px;
+  overflow: auto;
+  padding: 8px;
+  border-radius: 8px;
+  color: #B7E3FF;
+  background: rgba(0,0,0,.35);
+  border: 1px solid rgba(255,255,255,.06);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.blueprint-ai-sidebar__results footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  padding: 0;
+}
+
+.blueprint-ai-sidebar__results footer button {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 9px;
+  color: rgba(255,255,255,.84);
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.blueprint-ai-sidebar__results footer button:first-child {
+  color: #fff;
+  background: rgba(30,123,255,.2);
+  border-color: rgba(41,151,255,.36);
+}
+
+.blueprint-ai-sidebar__context p::-webkit-scrollbar,
+.blueprint-ai-sidebar__quick::-webkit-scrollbar,
+.blueprint-ai-sidebar__results::-webkit-scrollbar,
+.blueprint-ai-sidebar__results article code::-webkit-scrollbar {
+  width: 8px;
+}
+
+.blueprint-ai-sidebar__context p::-webkit-scrollbar-thumb,
+.blueprint-ai-sidebar__quick::-webkit-scrollbar-thumb,
+.blueprint-ai-sidebar__results::-webkit-scrollbar-thumb,
+.blueprint-ai-sidebar__results article code::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(41,151,255,.34);
+  border: 2px solid rgba(5,7,10,.8);
+}
+
 .node-library {
   min-height: 0;
   display: grid;
@@ -976,9 +1185,32 @@
 
 @media (max-width: 1180px) {
   .blueprints-page__workspace {
-    grid-template-columns: 240px minmax(0, 1fr);
+    grid-template-columns: 236px minmax(0, 1fr) 286px;
   }
-  .blueprint-inspector {
-    display: none;
+
+  .blueprint-ai-sidebar {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 980px) {
+  .blueprints-page__workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 220px minmax(420px, 1fr) 340px;
+  }
+
+  .blueprint-explorer,
+  .blueprint-right-panel {
+    min-height: 0;
+  }
+
+  .blueprint-tab-header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .blueprint-tab-header__center,
+  .blueprint-tab-header__right {
+    justify-content: flex-start;
+    overflow-x: auto;
   }
 }

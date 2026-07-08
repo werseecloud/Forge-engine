@@ -3,6 +3,7 @@ import { Bot, Check, Database, FilePlus2, Lock, MessageSquare, Play, Shield, Spa
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { commands } from "../../lib/tauri";
+import { useAssetStore } from "../../stores/useAssetStore";
 import { useProjectStore } from "../../stores/useProjectStore";
 import { useSceneStore } from "../../stores/useSceneStore";
 import type { AiCompatibilityReport, AiContext, AiPermissionSet, AiProposedAction, InstalledModel } from "../../types/ai";
@@ -23,6 +24,7 @@ export function WerseeAIModal({ open, onClose, onError, onSuccess }: WerseeAIMod
   const activeLevel = useSceneStore((state) => state.activeLevel);
   const selectedSceneObject = useSceneStore((state) => state.selectedSceneObject);
   const setActiveLevel = useSceneStore((state) => state.setActiveLevel);
+  const assetIndex = useAssetStore((state) => state.assetIndex);
   const [tab, setTab] = useState<AiTab>("setup");
   const [report, setReport] = useState<AiCompatibilityReport | null>(null);
   const [models, setModels] = useState<InstalledModel[]>([]);
@@ -99,6 +101,8 @@ export function WerseeAIModal({ open, onClose, onError, onSuccess }: WerseeAIMod
       projectRoot: currentProject?.rootPath ?? null,
       selectedEntityJson: selectedSceneObject ? JSON.stringify(selectedSceneObject) : null,
       activeLevelJson: activeLevel ? JSON.stringify(activeLevel) : null,
+      assetIndexJson: assetIndex ? JSON.stringify(assetIndex) : null,
+      activeBlueprintGraphJson: null,
       activeFilePath: null,
       diagnostics: [],
       userIntent: userPrompt
